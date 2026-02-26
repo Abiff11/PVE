@@ -9,7 +9,12 @@ import {
   Matches,
 } from 'class-validator';
 
+/**
+ * Define los campos obligatorios para registrar nuevas infracciones desde el front.
+ */
 export class CreateInfraccionDto {
+
+  
   @IsString()
   @IsNotEmpty()
   folio: string;
@@ -19,11 +24,19 @@ export class CreateInfraccionDto {
 
   @IsString()
   @IsNotEmpty()
+  nombreInfractor: string;
+
+  @IsString()
+  @IsNotEmpty()
   nombreOficial: string;
 
   @IsString()
   @IsNotEmpty()
-  area: string;
+  delegacion: string;
+
+  @IsString()
+  @IsNotEmpty()
+  detalleInfraccion: string;
 
   @Matches(/^([01]\d|2[0-3]):([0-5]\d)$/)
   hora: string;
@@ -31,4 +44,5 @@ export class CreateInfraccionDto {
   @IsNumber()
   @IsPositive()
   monto: number;
+  
 }
