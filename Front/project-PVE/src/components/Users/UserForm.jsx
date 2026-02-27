@@ -2,7 +2,6 @@ import { useState } from 'react';
 
 /**
  * Delegaciones disponibles en el sistema. Se estandarizan los nombres para evitar variaciones.
- * Las opciones solicitadas (Motocicletas, Alcoholimetro, Guppa Yoo, Patrulleros) se reemplazan por Plaza.
  */
 const DELEGACIONES = [
   'Plaza',

@@ -9,6 +9,7 @@ export enum UserRole {
   DIRECTOR = 'director',
   CAPTURISTA = 'capturista',
   ACTUALIZADOR = 'actualizador',
+  ENCIERRO = 'encierro',
 }
 
 /**

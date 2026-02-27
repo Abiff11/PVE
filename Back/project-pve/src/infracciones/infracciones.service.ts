@@ -58,6 +58,20 @@ export class InfraccionesService {
       throw new BadRequestException('Usuario no encontrado');
     }
 
+    // Validación de coherencia de negocio:
+    // soloInfraccion = true significa que NO hubo consignación de ningún tipo.
+    // Si hay consignaciones (> 0), el campo soloInfraccion debe ser false.
+    // Persistir soloInfraccion = true junto con consignaciones generaría datos contradictorios.
+    if (
+      rest.soloInfraccion === true &&
+      ((rest.consignacionVehiculo ?? 0) > 0 ||
+        (rest.consignacionMotocicleta ?? 0) > 0)
+    ) {
+      throw new BadRequestException(
+        'soloInfraccion no puede ser true si hay consignaciones registradas',
+      );
+    }
+
     const nueva = this.infraccionRepository.create({
       ...rest,
       fechaHora,
@@ -89,9 +103,12 @@ export class InfraccionesService {
    * Retorna una pagina de infracciones con filtros opcionales por delegacion,
    * oficial o fecha exacta (rango dentro del mismo dia).
    */
-  async findAll(
-    query?: QueryInfraccionDto,
-  ): Promise<{ data: Infraccion[]; total: number; page: number; pageSize: number }> {
+  async findAll(query?: QueryInfraccionDto): Promise<{
+    data: Infraccion[];
+    total: number;
+    page: number;
+    pageSize: number;
+  }> {
     const {
       delegacion,
       nombreOficial,
@@ -209,7 +226,9 @@ export class InfraccionesService {
       const inicio = new Date(filters.fechaInicio);
       const fin = new Date(filters.fechaFin);
       if (inicio > fin) {
-        throw new BadRequestException('fechaInicio no puede ser mayor a fechaFin');
+        throw new BadRequestException(
+          'fechaInicio no puede ser mayor a fechaFin',
+        );
       }
     }
 
@@ -329,6 +348,25 @@ export class InfraccionesService {
       fechaHora = nuevaFecha;
     }
 
+    // Validación de coherencia de negocio en actualización:
+    // Calculamos los valores finales combinando los datos existentes con los cambios entrantes.
+    // Si soloInfraccion queda en true pero hay consignaciones, los datos serían contradictorios.
+    const soloInfraccionFinal =
+      rest.soloInfraccion ?? infraccion.soloInfraccion;
+    const consignacionVehiculoFinal =
+      rest.consignacionVehiculo ?? infraccion.consignacionVehiculo;
+    const consignacionMotocicletaFinal =
+      rest.consignacionMotocicleta ?? infraccion.consignacionMotocicleta;
+
+    if (
+      soloInfraccionFinal === true &&
+      (consignacionVehiculoFinal > 0 || consignacionMotocicletaFinal > 0)
+    ) {
+      throw new BadRequestException(
+        'soloInfraccion no puede ser true si hay consignaciones registradas',
+      );
+    }
+
     const actualizada = await this.infraccionRepository.save({
       ...infraccion,
       ...rest,
@@ -374,4 +412,3 @@ export class InfraccionesService {
     return infraccion;
   }
 }
-

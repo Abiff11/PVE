@@ -164,6 +164,14 @@ th {
   font-size: 0.85rem;
   color: #475569;
 }
+.table-wrapper table {
+  min-width: 1400px; /* Ajusta este valor según la cantidad de columnas */
+}
+
+.table-wrapper th,
+.table-wrapper td {
+  white-space: nowrap; /* Opcional: evita que el texto se corte en varias líneas */
+}
 
 .pagination {
   margin-top: 1rem;

@@ -1,42 +1,42 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { infraccionesService } from '../../services/infracciones';
-import { useAuth } from '../../hooks/useAuth';
-import PaginationControls from '../../components/Table/PaginationControls';
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { infraccionesService } from "../../services/infracciones";
+import { useAuth } from "../../hooks/useAuth";
+import PaginationControls from "../../components/Table/PaginationControls";
 
-const CREATE_ROLES = ['admin', 'capturista'];
+const CREATE_ROLES = ["admin", "capturista"];
 
 /**
  * Mapea los mensajes de error del backend a textos más amigables para la UI.
  */
 function formatErrorMessage(error) {
-  const rawMessage = error?.details?.message ?? error?.message ?? 'Ocurrió un error inesperado';
+  const rawMessage = error?.details?.message ?? error?.message ?? "Ocurrió un error inesperado";
   const messages = Array.isArray(rawMessage) ? rawMessage : [rawMessage];
 
   const friendly = messages
     .filter(Boolean)
     .map((msg) => {
-      if (typeof msg !== 'string') {
+      if (typeof msg !== "string") {
         return msg;
       }
       const normalized = msg.toLowerCase();
-      if (normalized.includes('fecha') && normalized.includes('must match')) {
-        return 'La fecha debe tener el formato AAAA-MM-DD (por ejemplo 2026-02-26).';
+      if (normalized.includes("fecha") && normalized.includes("must match")) {
+        return "La fecha debe tener el formato AAAA-MM-DD (por ejemplo 2026-02-26).";
       }
-      if (normalized.includes('fechainicio')) {
-        if (normalized.includes('mayor a')) {
-          return 'La fecha inicial no puede ser mayor que la fecha final.';
+      if (normalized.includes("fechainicio")) {
+        if (normalized.includes("mayor a")) {
+          return "La fecha inicial no puede ser mayor que la fecha final.";
         }
-        return 'La fecha inicial debe tener el formato AAAA-MM-DD.';
+        return "La fecha inicial debe tener el formato AAAA-MM-DD.";
       }
-      if (normalized.includes('fechafin')) {
-        return 'La fecha final debe tener el formato AAAA-MM-DD.';
+      if (normalized.includes("fechafin")) {
+        return "La fecha final debe tener el formato AAAA-MM-DD.";
       }
       return msg;
     })
-    .join(' • ');
+    .join(" • ");
 
-  return friendly || 'Ocurrió un error inesperado';
+  return friendly || "Ocurrió un error inesperado";
 }
 
 /**
@@ -46,10 +46,10 @@ function InfraccionesListPage() {
   const navigate = useNavigate();
   const { token, role } = useAuth();
   const [filters, setFilters] = useState({
-    delegacion: '',
-    nombreOficial: '',
-    fechaInicio: '',
-    fechaFin: '',
+    delegacion: "",
+    nombreOficial: "",
+    fechaInicio: "",
+    fechaFin: "",
   });
   const [pageState, setPageState] = useState({
     data: [],
@@ -109,7 +109,7 @@ function InfraccionesListPage() {
           <p>Consulta, filtra y navega entre los folios registrados.</p>
         </div>
         {CREATE_ROLES.includes(role) && (
-          <button type="button" onClick={() => navigate('/infracciones/nueva')}>
+          <button type="button" onClick={() => navigate("/infracciones/nueva")}>
             Registrar infracción
           </button>
         )}
@@ -134,33 +134,18 @@ function InfraccionesListPage() {
         </label>
         <label>
           Nombre oficial
-          <input
-            type="text"
-            name="nombreOficial"
-            value={filters.nombreOficial}
-            onChange={handleFilterChange}
-          />
+          <input type="text" name="nombreOficial" value={filters.nombreOficial} onChange={handleFilterChange} />
         </label>
         <label>
           Fecha desde
-          <input
-            type="date"
-            name="fechaInicio"
-            value={filters.fechaInicio}
-            onChange={handleFilterChange}
-          />
+          <input type="date" name="fechaInicio" value={filters.fechaInicio} onChange={handleFilterChange} />
         </label>
         <label>
           Fecha hasta
-          <input
-            type="date"
-            name="fechaFin"
-            value={filters.fechaFin}
-            onChange={handleFilterChange}
-          />
+          <input type="date" name="fechaFin" value={filters.fechaFin} onChange={handleFilterChange} />
         </label>
         <button type="submit" disabled={loading}>
-          {loading ? 'Buscando...' : 'Aplicar filtros'}
+          {loading ? "Buscando..." : "Aplicar filtros"}
         </button>
       </form>
 
@@ -172,6 +157,7 @@ function InfraccionesListPage() {
           <table>
             <thead>
               <tr>
+                {/* Columnas de identificación básica */}
                 <th>Folio</th>
                 <th>Infractor</th>
                 <th>Oficial</th>
@@ -179,24 +165,50 @@ function InfraccionesListPage() {
                 <th>Fecha/Hora</th>
                 <th>Monto</th>
                 <th>Estatus</th>
+                {/* Columnas de vehículo (nuevos campos) */}
+                <th>Vehículo</th>
+                <th>Placas</th>
+                <th>Servicio</th>
+                {/* Columnas de detención y consignación (valores numéricos: cantidad de vehículos/motos) */}
+                <th>Vehículo detenido</th>
+                <th>Motocicleta detenida</th>
+                <th>Solo infracción</th>
+                <th>Consignación vehículo</th>
+                <th>Consignación motocicleta</th>
+                {/* Columna de acciones: enlace al detalle completo del registro */}
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {pageState.data.length === 0 ? (
                 <tr>
-                  <td colSpan={8}>No se encontraron registros con los filtros actuales.</td>
+                  {/* colSpan debe coincidir con el número total de columnas del thead (17) */}
+                  <td colSpan={17}>No se encontraron registros con los filtros actuales.</td>
                 </tr>
               ) : (
                 pageState.data.map((item) => (
                   <tr key={item.id}>
+                    {/* Datos de identificación */}
                     <td>{item.folio}</td>
                     <td>{item.nombreInfractor}</td>
                     <td>{item.nombreOficial}</td>
                     <td>{item.delegacion}</td>
                     <td>{new Date(item.fechaHora).toLocaleString()}</td>
-                    <td>${Number(item.monto).toLocaleString('es-MX')}</td>
+                    <td>${Number(item.monto).toLocaleString("es-MX")}</td>
                     <td>{item.estatus}</td>
+                    {/* Datos del vehículo involucrado */}
+                    <td>{item.vehiculo}</td>
+                    <td>{item.placas}</td>
+                    <td>{item.servicio}</td>
+                    {/* Cantidades numéricas: cuántos vehículos/motos fueron detenidos */}
+                    <td>{Number(item.vehiculoDetenido ?? 0)}</td>
+                    <td>{Number(item.motocicletaDetenida ?? 0)}</td>
+                    {/* soloInfraccion es boolean: true = sin consignación, false = con consignación */}
+                    <td>{item.soloInfraccion ? "Sí" : "No"}</td>
+                    {/* Cantidades de consignaciones realizadas */}
+                    <td>{Number(item.consignacionVehiculo ?? 0)}</td>
+                    <td>{Number(item.consignacionMotocicleta ?? 0)}</td>
+                    {/* Enlace al detalle completo del registro */}
                     <td>
                       <Link to={`/infracciones/${item.folio}`}>Ver detalle</Link>
                     </td>

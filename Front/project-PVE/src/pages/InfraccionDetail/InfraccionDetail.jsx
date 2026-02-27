@@ -1,14 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import { infraccionesService } from '../../services/infracciones';
-import InfraccionForm from '../../components/FormInfraccion/InfraccionForm';
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import { infraccionesService } from "../../services/infracciones";
+import InfraccionForm from "../../components/FormInfraccion/InfraccionForm";
 
-const UPDATE_ROLES = ['admin', 'actualizador'];
-const DELETE_ROLES = ['admin', 'director'];
+const UPDATE_ROLES = ["admin", "actualizador", "encierro"];
+const DELETE_ROLES = ["admin", "director"];
 
 /**
  * Convierte el registro proveniente del backend al modelo que consume el formulario.
+ * Ahora incluye todos los nuevos campos de la infracción.
  */
 function mapRecordToFormValues(record) {
   if (!record) {
@@ -28,6 +29,15 @@ function mapRecordToFormValues(record) {
     hora,
     monto: record.monto,
     estatus: record.estatus,
+    // Nuevos campos
+    vehiculo: record.vehiculo,
+    placas: record.placas,
+    servicio: record.servicio,
+    vehiculoDetenido: record.vehiculoDetenido,
+    motocicletaDetenida: record.motocicletaDetenida,
+    consignacionVehiculo: record.consignacionVehiculo,
+    consignacionMotocicleta: record.consignacionMotocicleta,
+    soloInfraccion: record.soloInfraccion,
   };
 }
 
@@ -56,7 +66,7 @@ function InfraccionDetailPage() {
       const data = await infraccionesService.getByFolio(folio, token);
       setRecord(data);
     } catch (err) {
-      setError(err.message ?? 'No fue posible cargar la infracción solicitada');
+      setError(err.message ?? "No fue posible cargar la infracción solicitada");
     } finally {
       setLoading(false);
     }
@@ -73,25 +83,25 @@ function InfraccionDetailPage() {
     try {
       const { folio: _ignored, ...updateDto } = payload;
       await infraccionesService.update(folio, updateDto, token);
-      setSuccessMessage('Infracción actualizada correctamente');
+      setSuccessMessage("Infracción actualizada correctamente");
       await loadRecord();
     } catch (err) {
-      setError(err.message ?? 'No fue posible actualizar la infracción');
+      setError(err.message ?? "No fue posible actualizar la infracción");
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('¿Deseas eliminar esta infracción?')) {
+    if (!window.confirm("¿Deseas eliminar esta infracción?")) {
       return;
     }
     setSubmitting(true);
     try {
       await infraccionesService.remove(folio, token);
-      navigate('/infracciones');
+      navigate("/infracciones");
     } catch (err) {
-      setError(err.message ?? 'No fue posible eliminar la infracción');
+      setError(err.message ?? "No fue posible eliminar la infracción");
     } finally {
       setSubmitting(false);
     }
@@ -124,6 +134,7 @@ function InfraccionDetailPage() {
       </header>
 
       {successMessage ? <p className="success-text">{successMessage}</p> : null}
+
       {canUpdate ? (
         <InfraccionForm
           initialValues={initialValues}
@@ -135,9 +146,59 @@ function InfraccionDetailPage() {
         />
       ) : (
         <article className="detail-panel">
+          <h3>Información de la infracción (solo lectura)</h3>
+          <dl>
+            <dt>Folio</dt>
+            <dd>{record.folio}</dd>
+
+            <dt>Fecha y hora</dt>
+            <dd>{new Date(record.fechaHora).toLocaleString()}</dd>
+
+            <dt>Infractor</dt>
+            <dd>{record.nombreInfractor}</dd>
+
+            <dt>Oficial</dt>
+            <dd>{record.nombreOficial}</dd>
+
+            <dt>Delegación</dt>
+            <dd>{record.delegacion}</dd>
+
+            <dt>Detalle</dt>
+            <dd>{record.detalleInfraccion}</dd>
+
+            <dt>Monto</dt>
+            <dd>${record.monto}</dd>
+
+            <dt>Estatus</dt>
+            <dd>{record.estatus}</dd>
+
+            {/* Nuevos campos */}
+            <dt>Vehículo</dt>
+            <dd>{record.vehiculo}</dd>
+
+            <dt>Placas</dt>
+            <dd>{record.placas}</dd>
+
+            <dt>Servicio</dt>
+            <dd>{record.servicio}</dd>
+
+            <dt>Vehículo detenido</dt>
+            <dd>{record.vehiculoDetenido ? "Sí" : "No"}</dd>
+
+            <dt>Motocicleta detenida</dt>
+            <dd>{record.motocicletaDetenida ? "Sí" : "No"}</dd>
+
+            <dt>Consignación vehículo</dt>
+            <dd>{record.consignacionVehiculo ? "Sí" : "No"}</dd>
+
+            <dt>Consignación motocicleta</dt>
+            <dd>{record.consignacionMotocicleta ? "Sí" : "No"}</dd>
+
+            <dt>Solo infracción</dt>
+            <dd>{record.soloInfraccion ? "Sí" : "No"}</dd>
+          </dl>
           <p>
-            Solo los roles {UPDATE_ROLES.join(', ')} pueden editar. Contacta a un administrador si
-            necesitas cambios.
+            Solo los roles {UPDATE_ROLES.join(", ")} pueden editar. Contacta a un administrador si necesitas cambios.
           </p>
         </article>
       )}

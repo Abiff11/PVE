@@ -1,5 +1,3 @@
-//*Creamos el dto de infracion esto vamos a recibir del front
-
 import {
   IsDateString,
   IsNotEmpty,
@@ -7,20 +5,22 @@ import {
   IsPositive,
   IsString,
   Matches,
+  IsInt,
+  Min,
+  IsBoolean,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
-/**
- * Define los campos obligatorios para registrar nuevas infracciones desde el front.
- */
 export class CreateInfraccionDto {
-
-  
   @IsString()
   @IsNotEmpty()
   folio: string;
 
   @IsDateString()
   fecha: string;
+
+  @Matches(/^([01]\d|2[0-3]):([0-5]\d)$/)
+  hora: string;
 
   @IsString()
   @IsNotEmpty()
@@ -38,11 +38,45 @@ export class CreateInfraccionDto {
   @IsNotEmpty()
   detalleInfraccion: string;
 
-  @Matches(/^([01]\d|2[0-3]):([0-5]\d)$/)
-  hora: string;
-
+  @Type(() => Number)
   @IsNumber()
   @IsPositive()
   monto: number;
-  
+
+  // ========= NUEVOS CAMPOS =========
+  @IsString()
+  @IsNotEmpty()
+  vehiculo: string;
+
+  @IsString()
+  @IsNotEmpty()
+  placas: string;
+
+  @IsString()
+  @IsNotEmpty()
+  servicio: string;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  vehiculoDetenido: number;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  motocicletaDetenida: number;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  consignacionVehiculo: number;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  consignacionMotocicleta: number;
+
+  @IsBoolean()
+  @Type(() => Boolean)
+  soloInfraccion: boolean;
 }

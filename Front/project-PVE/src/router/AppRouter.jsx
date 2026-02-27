@@ -1,16 +1,16 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import LoginPage from '../pages/Login/Login';
-import DashboardPage from '../pages/Dashboard/Dashboard';
-import InfraccionesListPage from '../pages/InfraccionesList/InfraccionesList';
-import InfraccionDetailPage from '../pages/InfraccionDetail/InfraccionDetail';
-import NuevaInfraccionPage from '../pages/NuevaInfraccion/NuevaInfraccion';
-import UsersDashboard from '../pages/Users/UsersDashboard';
-import BitacoraPage from '../pages/Bitacora/Bitacora';
-import PublicLayout from '../components/Layout/PublicLayout';
-import PrivateLayout from '../components/Layout/PrivateLayout';
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+import LoginPage from "../pages/Login/Login";
+import DashboardPage from "../pages/Dashboard/Dashboard";
+import InfraccionesListPage from "../pages/InfraccionesList/InfraccionesList";
+import InfraccionDetailPage from "../pages/InfraccionDetail/InfraccionDetail";
+import NuevaInfraccionPage from "../pages/NuevaInfraccion/NuevaInfraccion";
+import UsersDashboard from "../pages/Users/UsersDashboard";
+import BitacoraPage from "../pages/Bitacora/Bitacora";
+import PublicLayout from "../components/Layout/PublicLayout";
+import PrivateLayout from "../components/Layout/PrivateLayout";
 
-const ALL_ROLES = ['admin', 'director', 'capturista', 'actualizador'];
+const ALL_ROLES = ["admin", "director", "capturista", "actualizador", "encierro"];
 
 /**
  * Route protegida: valida autenticación y (opcionalmente) roles permitidos.
@@ -67,7 +67,7 @@ export function AppRouter() {
           <Route
             path="/dashboard"
             element={
-              <PrivateRoute allowedRoles={['admin', 'director']}>
+              <PrivateRoute allowedRoles={["admin", "director"]}>
                 <DashboardPage />
               </PrivateRoute>
             }
@@ -83,7 +83,7 @@ export function AppRouter() {
           <Route
             path="/infracciones/nueva"
             element={
-              <PrivateRoute allowedRoles={['admin', 'capturista']}>
+              <PrivateRoute allowedRoles={["admin", "capturista"]}>
                 <NuevaInfraccionPage />
               </PrivateRoute>
             }
@@ -99,7 +99,7 @@ export function AppRouter() {
           <Route
             path="/usuarios"
             element={
-              <PrivateRoute allowedRoles={['admin']}>
+              <PrivateRoute allowedRoles={["admin"]}>
                 <UsersDashboard />
               </PrivateRoute>
             }
@@ -107,7 +107,7 @@ export function AppRouter() {
           <Route
             path="/bitacora"
             element={
-              <PrivateRoute allowedRoles={['admin']}>
+              <PrivateRoute allowedRoles={["admin"]}>
                 <BitacoraPage />
               </PrivateRoute>
             }

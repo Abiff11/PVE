@@ -2,20 +2,17 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { environment } from './config/environment';
 import { ValidationPipe } from '@nestjs/common';
+// import * as helmet from 'helmet'; // cuando instales helmet
 
-/**
- * Entrypoint de Nest. Registra validaciones globales y levanta el API.
- */
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // app.use(helmet()); // opcional, mejora seguridad
+
   app.useGlobalPipes(
     new ValidationPipe({
-      // whitelist elimina propiedades no declaradas en el DTO
       whitelist: true,
-      // forbid rechaza payloads con campos fuera del DTO
       forbidNonWhitelisted: true,
-      // transform convierte strings a los tipos esperados
       transform: true,
     }),
   );
@@ -25,11 +22,8 @@ async function bootstrap() {
     credentials: true,
   });
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(environment.PORT); // usamos environment.PORT
 
-  const PORT = environment.PORT;
-  const HOST = environment.HOST;
-
-  console.log(`Server listening on http://${HOST}:${PORT}/`);
+  console.log(`🚀 Servidor corriendo en http://${environment.HOST}:${environment.PORT}/`);
 }
 bootstrap();
