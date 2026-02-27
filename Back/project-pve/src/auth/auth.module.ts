@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { UsersModule } from '../users/users.module'; // Para acceder al servicio de usuarios
+import { BitacoraModule } from '../bitacora/bitacora.module';
 
 /**
  * Modulo de autenticacion: registra Passport, JWT y expone el AuthService/controller.
@@ -20,11 +21,12 @@ import { UsersModule } from '../users/users.module'; // Para acceder al servicio
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get('JWT_SECRET'),
         signOptions: {
-          expiresIn: configService.get('JWT_EXPIRES_IN') || '1d',
+          expiresIn: configService.get('JWT_EXPIRES_IN') || '1h',
         },
       }),
     }),
     UsersModule, // acceso al UsersService para validar credenciales
+    BitacoraModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

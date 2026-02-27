@@ -20,6 +20,7 @@ import { Roles } from '../auth/decorators/roles.decorators';
 import { RolesGuard } from '../auth/roles/roles.guard';
 import { UserRole } from '../users/entities/user.entity';
 import { QueryInfraccionDto } from './dto/QueryInfraccion.dto';
+import { KpiInfraccionDto } from './dto/KpiInfraccion.dto';
 import type { Request } from 'express';
 
 /**
@@ -66,6 +67,15 @@ export class InfraccionesController {
   }
 
   /**
+   * KPIs disponibles para director/admin. Muestra totales, montos y top delegaciones.
+   */
+  @Get('kpis/resumen')
+  @Roles(UserRole.ADMIN, UserRole.DIRECTOR)
+  async getKpis(@Query() query: KpiInfraccionDto) {
+    return await this.infraccionesService.getKpis(query);
+  }
+
+  /**
    * Busca una infraccion puntual por folio para mostrar detalles.
    */
   @Get(':folio')
@@ -89,10 +99,13 @@ export class InfraccionesController {
   async update(
     @Param('folio') folio: string,
     @Body() updateInfraccionDto: UpdateInfraccionDto,
+    @Req() req: Request,
   ) {
+    const actor = req.user as { sub?: number; username?: string };
     const infraccion = await this.infraccionesService.update(
       folio,
       updateInfraccionDto,
+      { id: actor?.sub, username: actor?.username },
     );
 
     return {
@@ -106,8 +119,12 @@ export class InfraccionesController {
    */
   @Delete(':folio')
   @Roles(UserRole.ADMIN, UserRole.DIRECTOR)
-  async deleteInfra(@Param('folio') folio: string) {
-    const infraccion = await this.infraccionesService.deleteInfra(folio);
+  async deleteInfra(@Param('folio') folio: string, @Req() req: Request) {
+    const actor = req.user as { sub?: number; username?: string };
+    const infraccion = await this.infraccionesService.deleteInfra(folio, {
+      id: actor?.sub,
+      username: actor?.username,
+    });
 
     return {
       message: 'Infracción eliminada con éxito',

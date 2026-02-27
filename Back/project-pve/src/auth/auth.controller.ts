@@ -1,11 +1,13 @@
 
 
 // auth/auth.controller.ts
-import { Controller, Post, Body } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { AuthGuard } from '@nestjs/passport';
+import type { Request } from 'express';
 
 /**
- * Controlador minimal para exponer el endpoint de inicio de sesion.
+ * Controlador para exponer los endpoints de autenticación.
  */
 @Controller('auth')
 export class AuthController {
@@ -15,7 +17,36 @@ export class AuthController {
    * POST /auth/signin -> devuelve el access token JWT.
    */
   @Post('signin')
-  async signin(@Body() body: { username: string; password: string }) {
-    return this.authService.signin(body.username, body.password);
+  async signin(
+    @Body() body: { username: string; password: string },
+    @Req() req: Request,
+  ) {
+    const ip = this.getClientIp(req);
+    return this.authService.signin(body.username, body.password, ip);
+  }
+
+  /**
+   * POST /auth/logout -> registra la salida del usuario autenticado.
+   */
+  @Post('logout')
+  @UseGuards(AuthGuard('jwt'))
+  async logout(@Req() req: Request) {
+    const user = req.user as { id?: number; username?: string };
+    const ip = this.getClientIp(req);
+    return this.authService.logout(
+      { id: user?.id, username: user?.username },
+      ip,
+    );
+  }
+
+  private getClientIp(req: Request): string | undefined {
+    const forwarded = req.headers['x-forwarded-for'];
+    if (Array.isArray(forwarded)) {
+      return forwarded[0];
+    }
+    if (typeof forwarded === 'string' && forwarded.length > 0) {
+      return forwarded.split(',')[0].trim();
+    }
+    return req.ip;
   }
 }

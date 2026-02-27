@@ -20,6 +20,11 @@ async function bootstrap() {
     }),
   );
 
+  app.enableCors({
+    origin: environment.FRONT_ORIGINS,
+    credentials: true,
+  });
+
   await app.listen(process.env.PORT ?? 3000);
 
   const PORT = environment.PORT;

@@ -18,6 +18,14 @@ export class QueryInfraccionDto {
   fecha?: string;
 
   @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  fechaInicio?: string;
+
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  fechaFin?: string;
+
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @IsPositive()

@@ -5,7 +5,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Infraccion, EstatusInfraccion } from './entities/Infraccion.entity';
 import { Repository } from 'typeorm';
 import { QueryInfraccionDto } from './dto/QueryInfraccion.dto';
+import { KpiInfraccionDto } from './dto/KpiInfraccion.dto';
 import { UsersService } from '../users/users.service';
+import { BitacoraService } from '../bitacora/bitacora.service';
 
 /**
  * Contiene la logica de negocio para crear, filtrar y mantener infracciones.
@@ -17,6 +19,7 @@ export class InfraccionesService {
     @InjectRepository(Infraccion)
     private readonly infraccionRepository: Repository<Infraccion>,
     private readonly usersService: UsersService,
+    private readonly bitacoraService: BitacoraService,
   ) {}
 
   private readonly logger = new Logger(InfraccionesService.name);
@@ -68,6 +71,13 @@ export class InfraccionesService {
       `Infracción creada folio=${guardada.folio} monto=${guardada.monto}`,
     );
 
+    await this.bitacoraService.log('INFRACCION_CREADA', {
+      description: `Se registró la infracción ${guardada.folio}`,
+      userId: creador.id,
+      username: creador.username,
+      metadata: { infraccionId: guardada.id },
+    });
+
     return guardada;
   }
 
@@ -86,6 +96,8 @@ export class InfraccionesService {
       delegacion,
       nombreOficial,
       fecha,
+      fechaInicio,
+      fechaFin,
       page = 1,
       pageSize = 5,
     } = query ?? {};
@@ -121,6 +133,36 @@ export class InfraccionesService {
       });
     }
 
+    if (fechaInicio) {
+      const inicio = new Date(`${fechaInicio}T00:00:00`);
+      if (isNaN(inicio.getTime())) {
+        throw new BadRequestException('fechaInicio inválida');
+      }
+      qb.andWhere('infraccion.fechaHora >= :fechaInicioFiltro', {
+        fechaInicioFiltro: inicio,
+      });
+    }
+
+    if (fechaFin) {
+      const fin = new Date(`${fechaFin}T23:59:59.999`);
+      if (isNaN(fin.getTime())) {
+        throw new BadRequestException('fechaFin inválida');
+      }
+      qb.andWhere('infraccion.fechaHora <= :fechaFinFiltro', {
+        fechaFinFiltro: fin,
+      });
+    }
+
+    if (fechaInicio && fechaFin) {
+      const inicioDate = new Date(fechaInicio);
+      const finDate = new Date(fechaFin);
+      if (inicioDate > finDate) {
+        throw new BadRequestException(
+          'fechaInicio no puede ser mayor a fechaFin',
+        );
+      }
+    }
+
     qb.orderBy('infraccion.fechaHora', 'DESC')
       .skip((pageNumber - 1) * take)
       .take(take);
@@ -132,6 +174,103 @@ export class InfraccionesService {
       total,
       page: pageNumber,
       pageSize: take,
+    };
+  }
+
+  /**
+   * Calcula los KPIs principales usados por el director para monitorear infracciones.
+   */
+  async getKpis(filters: KpiInfraccionDto) {
+    const qb = this.infraccionRepository.createQueryBuilder('infraccion');
+
+    if (filters.delegacion) {
+      qb.andWhere('LOWER(infraccion.delegacion) LIKE :delegacionKpi', {
+        delegacionKpi: `%${filters.delegacion.toLowerCase()}%`,
+      });
+    }
+
+    if (filters.fechaInicio) {
+      const inicio = new Date(`${filters.fechaInicio}T00:00:00`);
+      if (isNaN(inicio.getTime())) {
+        throw new BadRequestException('fechaInicio invalida');
+      }
+      qb.andWhere('infraccion.fechaHora >= :inicio', { inicio });
+    }
+
+    if (filters.fechaFin) {
+      const fin = new Date(`${filters.fechaFin}T23:59:59.999`);
+      if (isNaN(fin.getTime())) {
+        throw new BadRequestException('fechaFin invalida');
+      }
+      qb.andWhere('infraccion.fechaHora <= :fin', { fin });
+    }
+
+    if (filters.fechaInicio && filters.fechaFin) {
+      const inicio = new Date(filters.fechaInicio);
+      const fin = new Date(filters.fechaFin);
+      if (inicio > fin) {
+        throw new BadRequestException('fechaInicio no puede ser mayor a fechaFin');
+      }
+    }
+
+    const total = await qb.getCount();
+
+    const conteoPorEstatusRaw = await qb
+      .clone()
+      .select('infraccion.estatus', 'estatus')
+      .addSelect('COUNT(*)', 'total')
+      .groupBy('infraccion.estatus')
+      .getRawMany<{ estatus: EstatusInfraccion; total: string }>();
+
+    const montoPorEstatusRaw = await qb
+      .clone()
+      .select('infraccion.estatus', 'estatus')
+      .addSelect('SUM(infraccion.monto)', 'monto')
+      .groupBy('infraccion.estatus')
+      .getRawMany<{ estatus: EstatusInfraccion; monto: string }>();
+
+    const topDelegacionesRaw = await qb
+      .clone()
+      .select('infraccion.delegacion', 'delegacion')
+      .addSelect('COUNT(*)', 'total')
+      .groupBy('infraccion.delegacion')
+      .orderBy('total', 'DESC')
+      .limit(5)
+      .getRawMany<{ delegacion: string; total: string }>();
+
+    const conteoPorEstatus = conteoPorEstatusRaw.reduce<Record<string, number>>(
+      (acc, item) => {
+        acc[item.estatus] = Number(item.total);
+        return acc;
+      },
+      {},
+    );
+
+    const montoPorEstatus = montoPorEstatusRaw.reduce<Record<string, number>>(
+      (acc, item) => {
+        acc[item.estatus] = Number(item.monto ?? 0);
+        return acc;
+      },
+      {},
+    );
+
+    const montoTotal = Object.values(montoPorEstatus).reduce(
+      (acc, value) => acc + value,
+      0,
+    );
+
+    const topDelegaciones = topDelegacionesRaw.map((item) => ({
+      delegacion: item.delegacion,
+      total: Number(item.total),
+    }));
+
+    return {
+      filtros: filters,
+      totalInfracciones: total,
+      conteoPorEstatus,
+      montoPorEstatus,
+      montoTotal,
+      topDelegaciones,
     };
   }
 
@@ -165,6 +304,7 @@ export class InfraccionesService {
   async update(
     folio: string,
     cambios: UpdateInfraccionDto,
+    actor?: { id?: number; username?: string },
   ): Promise<Infraccion> {
     const infraccion = await this.findByFolio(folio);
 
@@ -197,6 +337,13 @@ export class InfraccionesService {
 
     this.logger.log(`Infracción actualizada folio=${folio}`);
 
+    await this.bitacoraService.log('INFRACCION_ACTUALIZADA', {
+      description: `Se actualizó la infracción ${folio}`,
+      userId: actor?.id,
+      username: actor?.username,
+      metadata: { infraccionId: actualizada.id },
+    });
+
     return actualizada;
   }
 
@@ -207,13 +354,24 @@ export class InfraccionesService {
   /**
    * Elimina una infraccion por folio y retorna el registro borrado.
    */
-  async deleteInfra(folio: string): Promise<Infraccion> {
+  async deleteInfra(
+    folio: string,
+    actor?: { id?: number; username?: string },
+  ): Promise<Infraccion> {
     const infraccion = await this.findByFolio(folio);
 
     await this.infraccionRepository.remove(infraccion);
 
     this.logger.log(`Infracción eliminada folio=${folio}`);
 
+    await this.bitacoraService.log('INFRACCION_ELIMINADA', {
+      description: `Se eliminó la infracción ${folio}`,
+      userId: actor?.id,
+      username: actor?.username,
+      metadata: { infraccionId: infraccion.id },
+    });
+
     return infraccion;
   }
 }
+

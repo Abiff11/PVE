@@ -5,13 +5,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Infraccion } from './entities/Infraccion.entity';
 import { RolesGuard } from '../auth/roles/roles.guard';
 import { UsersModule } from '../users/users.module';
+import { BitacoraModule } from '../bitacora/bitacora.module';
 
 /**
  * Modulo encargado de exponer el dominio de infracciones:
  * registra el repositorio, el servicio de negocio y el controller protegido.
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([Infraccion]), UsersModule],
+  imports: [TypeOrmModule.forFeature([Infraccion]), UsersModule, BitacoraModule],
   controllers: [InfraccionesController],
   providers: [InfraccionesService, RolesGuard],
 })

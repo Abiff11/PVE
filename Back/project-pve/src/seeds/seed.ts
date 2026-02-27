@@ -25,7 +25,7 @@ const dataSource = new DataSource({
  */
 async function seedUsers(): Promise<Record<string, User>> {
   const usersRepository = dataSource.getRepository(User);
-  const defaultPassword = 'P@ssw0rd!';
+  const defaultPassword = 'admin';
   const passwordHash = await bcrypt.hash(defaultPassword, 10);
 
   const users: Array<Partial<User> & { username: string; role: UserRole }> = [

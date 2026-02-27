@@ -51,6 +51,7 @@ export class Infraccion {
   })
   estatus: EstatusInfraccion;
 
+  // Usuario que registró la infracción (FK obligatoria)
   @ManyToOne(() => User, (user) => user.infracciones, {
     eager: true,
     nullable: false,
