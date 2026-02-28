@@ -12,7 +12,7 @@ function PrivateLayout() {
     <div className="private-layout">
       <header className="private-layout__header">
         <div>
-          <h1>PVE</h1>
+          <h1>POLICIA VIAL ESTATAL</h1>
           <p>Panel de control</p>
         </div>
         <div className="private-layout__user">
