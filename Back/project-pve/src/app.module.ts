@@ -8,6 +8,7 @@ import { typeOrmConfig } from './config/typeorm';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { BitacoraModule } from './bitacora/bitacora.module';
+import { EncierroModule } from './encierro/encierro.module';
 
 /**
  * Modulo raiz: registra config global, conexion a DB y los modulos de dominio.
@@ -31,6 +32,7 @@ import { BitacoraModule } from './bitacora/bitacora.module';
       },
     }),
     InfraccionesModule,
+    EncierroModule,
     UsersModule,
     AuthModule,
     BitacoraModule,

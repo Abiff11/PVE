@@ -1,27 +1,17 @@
-import {
-  IsInt,
-  IsOptional,
-  IsPositive,
-  IsString,
-  Matches,
-} from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsInt, IsOptional, IsPositive, IsString, Matches } from 'class-validator';
 
 /**
- * Parametros de consulta permitidos en GET /infracciones.
+ * Parametros de consulta permitidos en GET /encierros.
  */
-export class QueryInfraccionDto {
+export class QueryEncierroDto {
   @IsOptional()
   @IsString()
   folio?: string;
 
   @IsOptional()
   @IsString()
-  municipio?: string;
-
-  @IsOptional()
-  @IsString()
-  claveOficial?: string;
+  encierro?: string;
 
   @IsOptional()
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
@@ -43,3 +33,4 @@ export class QueryInfraccionDto {
   @IsPositive()
   pageSize?: number;
 }
+

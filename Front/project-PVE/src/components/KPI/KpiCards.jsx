@@ -1,14 +1,19 @@
-/**
- * Despliega los principales indicadores recibidos desde /infracciones/kpis/resumen.
- * Recibe un objeto con totales ya calculados para mantener este componente presentacional.
- */
 function KpiCards({ resumen }) {
   if (!resumen) {
     return null;
   }
 
-  const { totalInfracciones, montoTotal, conteoPorEstatus, montoPorEstatus, topDelegaciones = [] } =
-    resumen;
+  const {
+    totalInfracciones,
+    montoTotal,
+    conteoPorEstatus,
+    montoPorEstatus,
+    topDelegaciones,
+    topAgencias,
+    vehiculosEnResguardo,
+  } = resumen;
+
+  const top = topAgencias ?? topDelegaciones ?? [];
 
   return (
     <section className="kpi-grid">
@@ -19,9 +24,15 @@ function KpiCards({ resumen }) {
 
       <article className="kpi-card">
         <h3>Monto total recaudado</h3>
-        <p className="kpi-value">
-          ${Number(montoTotal ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-        </p>
+        <p className="kpi-value">${Number(montoTotal ?? 0).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</p>
+      </article>
+
+      <article className="kpi-card">
+        <h3>Vehículos en resguardo</h3>
+        <ul>
+          <li>La Joya: {vehiculosEnResguardo?.laJoya ?? 0}</li>
+          <li>San Sebastián Tutla: {vehiculosEnResguardo?.sanSebastianTutla ?? 0}</li>
+        </ul>
       </article>
 
       <article className="kpi-card">
@@ -40,19 +51,18 @@ function KpiCards({ resumen }) {
         <ul>
           {Object.entries(montoPorEstatus ?? {}).map(([estatus, monto]) => (
             <li key={estatus}>
-              {estatus}:{' '}
-              {Number(monto ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+              {estatus}: {Number(monto ?? 0).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
             </li>
           ))}
         </ul>
       </article>
 
       <article className="kpi-card kpi-card--full">
-        <h3>Top delegaciones</h3>
+        <h3>Top Delegaciones</h3>
         <ol>
-          {topDelegaciones.map((item) => (
-            <li key={item.delegacion}>
-              {item.delegacion} · {item.total} infracciones
+          {top.map((item) => (
+            <li key={item.agencia ?? item.delegacion}>
+              {item.agencia ?? item.delegacion} · {item.total} infracciones
             </li>
           ))}
         </ol>

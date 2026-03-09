@@ -14,5 +14,5 @@ export class KpiInfraccionDto {
 
   @IsOptional()
   @IsString()
-  delegacion?: string;
+  agencia?: string;
 }

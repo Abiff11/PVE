@@ -1,18 +1,42 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import { infraccionesService } from '../../services/infracciones';
-import InfraccionForm from '../../components/FormInfraccion/InfraccionForm';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import { infraccionesService } from "../../services/infracciones";
+import InfraccionForm from "../../components/FormInfraccion/InfraccionForm";
+import { DEFAULT_ENCIERRO, DEFAULT_SERVICIO_GRUA } from "../../catalogos";
 
 const EMPTY_FORM = {
-  folio: '',
-  nombreInfractor: '',
-  nombreOficial: '',
-  delegacion: '',
-  detalleInfraccion: '',
-  fecha: '',
-  hora: '',
-  monto: '',
+  fecha: "",
+  hora: "",
+  folioInfraccion: "",
+  encierro: DEFAULT_ENCIERRO,
+  servicioGrua: DEFAULT_SERVICIO_GRUA,
+  nombreInfractor: "",
+  genero: "",
+  numeroLicencia: "",
+  servicio: "",
+  clase: "",
+  tipo: "",
+  marca: "",
+  modelo: "",
+  color: "",
+  placas: "",
+  estadoPlacas: "",
+  serie: "",
+  motor: "",
+  municipio: "",
+  agencia: "",
+  colonia: "",
+  calle: "",
+  m1: "",
+  m2: "",
+  m3: "",
+  m4: "",
+  situacionVehiculo: "SOLO_INFRACCION",
+  claveOficial: "",
+  numeroParteInformativo: "",
+  nombreOperativo: "",
+  sitioServicioPublico: "",
 };
 
 /**
@@ -25,13 +49,22 @@ function NuevaInfraccionPage() {
   const [error, setError] = useState(null);
 
   const handleSubmit = async (payload) => {
+    const confirmacion = window.confirm(
+      "¿Confirmas que todos los datos de la infracción son correctos?\n\nUna vez creada, la información no podrá modificarse.",
+    );
+
+    if (!confirmacion) {
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
+
     try {
       const response = await infraccionesService.create(payload, token);
-      navigate(`/infracciones/${response.folio}`);
+      navigate(`/infracciones/${response.folioInfraccion}`);
     } catch (err) {
-      setError(err.message ?? 'No fue posible registrar la infracción');
+      setError(err.message ?? "No fue posible registrar la infracción");
     } finally {
       setSubmitting(false);
     }

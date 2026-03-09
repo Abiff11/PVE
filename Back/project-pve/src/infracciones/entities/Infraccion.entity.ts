@@ -5,8 +5,10 @@ import {
   ManyToOne,
   JoinColumn,
   Index,
+  OneToOne,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { Encierro } from '../../encierro/entities/encierro.entity';
 
 /**
  * Estados posibles para el ciclo de vida de una infraccion.
@@ -17,71 +19,140 @@ export enum EstatusInfraccion {
 }
 
 /**
+ * Situación del vehículo al momento de levantar la infracción.
+ */
+export enum SituacionVehiculoInfraccion {
+  VEHICULO_DETENIDO = 'VEHICULO_DETENIDO',
+  SOLO_INFRACCION = 'SOLO_INFRACCION',
+}
+
+/**
  * Entity TypeORM que modela la tabla principal de infracciones.
  */
 @Entity('infracciones')
-// folio ya tiene { unique: true }, lo que en PostgreSQL crea un índice B-tree implícito.
-// Agregar @Index(['folio']) generaría un índice duplicado, desperdiciando espacio y ralentizando escrituras.
-@Index(['delegacion']) // índice para filtros frecuentes por delegación
-@Index(['nombreOficial']) // índice para búsquedas por nombre de oficial
-@Index(['fechaHora']) // índice para ordenamiento y filtros por rango de fechas
+@Index(['agencia'])
+@Index(['municipio'])
+@Index(['claveOficial'])
+@Index(['fechaHora'])
 export class Infraccion {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
-  folio: string;
+  @Column({ name: 'folio_infraccion', unique: true })
+  folioInfraccion: string;
+
+  @Column({ type: 'date' })
+  fecha: string;
+
+  @Column({ type: 'time' })
+  hora: string;
+
+  @Column({ type: 'timestamp' })
+  fechaHora: Date;
 
   @Column()
   nombreInfractor: string;
 
   @Column()
-  nombreOficial: string;
+  genero: string;
 
   @Column()
-  delegacion: string;
+  numeroLicencia: string;
 
-  // 🔧 Nuevo campo: vehículo involucrado
-  @Column()
-  vehiculo: string;
-
-  // 🔧 Nuevo campo: placas del vehículo
-  @Column()
-  placas: string;
-
-  @Column({ type: 'text' })
-  detalleInfraccion: string;
-
-  // 🔧 Servicio operativo o tipo de servicio
   @Column()
   servicio: string;
 
-  @Column({ type: 'timestamp' })
-  fechaHora: Date;
+  @Column()
+  clase: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column()
+  tipo: string;
+
+  @Column()
+  marca: string;
+
+  @Column()
+  modelo: string;
+
+  @Column()
+  color: string;
+
+  @Column()
+  placas: string;
+
+  @Column()
+  estadoPlacas: string;
+
+  @Column()
+  serie: string;
+
+  @Column()
+  motor: string;
+
+  @Column()
+  municipio: string;
+
+  @Column()
+  agencia: string;
+
+  @Column()
+  colonia: string;
+
+  @Column()
+  calle: string;
+
+  @Column({ nullable: true })
+  m1?: string;
+
+  @Column({ nullable: true })
+  m2?: string;
+
+  @Column({ nullable: true })
+  m3?: string;
+
+  @Column({ nullable: true })
+  m4?: string;
+
+  @Column({
+    type: 'enum',
+    enum: SituacionVehiculoInfraccion,
+  })
+  situacionVehiculo: SituacionVehiculoInfraccion;
+
+  @Column()
+  claveOficial: string;
+
+  @Column({ nullable: true })
+  numeroParteInformativo?: string;
+
+  @Column()
+  nombreOperativo: string;
+
+  @Column({ nullable: true })
+  sitioServicioPublico?: string;
+
+  @Column({ nullable: true })
+  encierro?: string;
+
+  @Column({ name: 'servicio_grua', nullable: true })
+  servicioGrua?: string;
+
+  @OneToOne(() => Encierro, (encierro) => encierro.infraccion, {
+    nullable: true,
+  })
+  encierroRegistro?: Encierro;
+
+  @Column({
+    type: 'numeric',
+    precision: 12,
+    scale: 2,
+    default: 0,
+    transformer: {
+      to: (value?: number) => value ?? 0,
+      from: (value: string | null) => Number(value ?? 0),
+    },
+  })
   monto: number;
-
-  // 🔧 Cantidades numéricas (no booleanos)
-  @Column({ type: 'int', default: 0 })
-  vehiculoDetenido: number;
-
-  @Column({ type: 'int', default: 0 })
-  motocicletaDetenida: number;
-
-  @Column({ type: 'int', default: 0 })
-  consignacionVehiculo: number;
-
-  @Column({ type: 'int', default: 0 })
-  consignacionMotocicleta: number;
-
-  /**
-   * 🔧 Solo infracción:
-   * Este campo es derivable. Si decides persistirlo, puede generar inconsistencias.
-   * Idealmente debería calcularse dinámicamente.
-   */
-  @Column({ type: 'boolean', default: true })
-  soloInfraccion: boolean;
 
   @Column({
     type: 'enum',

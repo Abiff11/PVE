@@ -1,20 +1,29 @@
 import {
   IsDateString,
   IsNotEmpty,
-  IsNumber,
-  IsPositive,
   IsString,
   Matches,
-  IsInt,
-  Min,
-  IsBoolean,
+  IsOptional,
+  IsEnum,
+  IsIn,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { SituacionVehiculoInfraccion } from '../entities/Infraccion.entity';
+import { ENCIERRO_OPTIONS, SERVICIO_GRUA_OPTIONS } from '../../catalogos';
 
 export class CreateInfraccionDto {
   @IsString()
   @IsNotEmpty()
-  folio: string;
+  folioInfraccion: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(ENCIERRO_OPTIONS)
+  encierro?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(SERVICIO_GRUA_OPTIONS)
+  servicioGrua?: string;
 
   @IsDateString()
   fecha: string;
@@ -28,25 +37,35 @@ export class CreateInfraccionDto {
 
   @IsString()
   @IsNotEmpty()
-  nombreOficial: string;
+  genero: string;
 
   @IsString()
   @IsNotEmpty()
-  delegacion: string;
+  numeroLicencia: string;
 
   @IsString()
   @IsNotEmpty()
-  detalleInfraccion: string;
+  servicio: string;
 
-  @Type(() => Number)
-  @IsNumber()
-  @IsPositive()
-  monto: number;
-
-  // ========= NUEVOS CAMPOS =========
   @IsString()
   @IsNotEmpty()
-  vehiculo: string;
+  clase: string;
+
+  @IsString()
+  @IsNotEmpty()
+  tipo: string;
+
+  @IsString()
+  @IsNotEmpty()
+  marca: string;
+
+  @IsString()
+  @IsNotEmpty()
+  modelo: string;
+
+  @IsString()
+  @IsNotEmpty()
+  color: string;
 
   @IsString()
   @IsNotEmpty()
@@ -54,29 +73,64 @@ export class CreateInfraccionDto {
 
   @IsString()
   @IsNotEmpty()
-  servicio: string;
+  estadoPlacas: string;
 
-  @Type(() => Number)
-  @IsInt()
-  @Min(0)
-  vehiculoDetenido: number;
+  @IsString()
+  @IsNotEmpty()
+  serie: string;
 
-  @Type(() => Number)
-  @IsInt()
-  @Min(0)
-  motocicletaDetenida: number;
+  @IsString()
+  @IsNotEmpty()
+  motor: string;
 
-  @Type(() => Number)
-  @IsInt()
-  @Min(0)
-  consignacionVehiculo: number;
+  @IsString()
+  @IsNotEmpty()
+  municipio: string;
 
-  @Type(() => Number)
-  @IsInt()
-  @Min(0)
-  consignacionMotocicleta: number;
+  @IsString()
+  @IsNotEmpty()
+  agencia: string;
 
-  @IsBoolean()
-  @Type(() => Boolean)
-  soloInfraccion: boolean;
+  @IsString()
+  @IsNotEmpty()
+  colonia: string;
+
+  @IsString()
+  @IsNotEmpty()
+  calle: string;
+
+  @IsOptional()
+  @IsString()
+  m1?: string;
+
+  @IsOptional()
+  @IsString()
+  m2?: string;
+
+  @IsOptional()
+  @IsString()
+  m3?: string;
+
+  @IsOptional()
+  @IsString()
+  m4?: string;
+
+  @IsEnum(SituacionVehiculoInfraccion)
+  situacionVehiculo: SituacionVehiculoInfraccion;
+
+  @IsString()
+  @IsNotEmpty()
+  claveOficial: string;
+
+  @IsOptional()
+  @IsString()
+  numeroParteInformativo?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  nombreOperativo: string;
+
+  @IsOptional()
+  @IsString()
+  sitioServicioPublico?: string;
 }

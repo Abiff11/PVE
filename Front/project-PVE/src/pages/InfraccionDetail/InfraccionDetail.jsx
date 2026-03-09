@@ -3,47 +3,53 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { infraccionesService } from "../../services/infracciones";
 import InfraccionForm from "../../components/FormInfraccion/InfraccionForm";
+import { DEFAULT_ENCIERRO, DEFAULT_SERVICIO_GRUA } from "../../catalogos";
 
-const UPDATE_ROLES = ["admin", "actualizador", "encierro"];
+const UPDATE_ROLES = ["admin", "actualizador" ];
 const DELETE_ROLES = ["admin", "director"];
 
-/**
- * Convierte el registro proveniente del backend al modelo que consume el formulario.
- * Ahora incluye todos los nuevos campos de la infracción.
- */
 function mapRecordToFormValues(record) {
   if (!record) {
     return null;
   }
-  const fechaObject = new Date(record.fechaHora);
-  const fecha = fechaObject.toISOString().slice(0, 10);
-  const hora = fechaObject.toISOString().slice(11, 16);
 
   return {
-    folio: record.folio,
+    folioInfraccion: record.folioInfraccion,
+    encierro: record.encierro ?? DEFAULT_ENCIERRO,
+    servicioGrua: record.servicioGrua ?? DEFAULT_SERVICIO_GRUA,
+    fecha: record.fecha,
+    hora: record.hora?.slice?.(0, 5) ?? record.hora,
     nombreInfractor: record.nombreInfractor,
-    nombreOficial: record.nombreOficial,
-    delegacion: record.delegacion,
-    detalleInfraccion: record.detalleInfraccion,
-    fecha,
-    hora,
-    monto: record.monto,
-    estatus: record.estatus,
-    // Nuevos campos
-    vehiculo: record.vehiculo,
-    placas: record.placas,
+    genero: record.genero,
+    numeroLicencia: record.numeroLicencia,
     servicio: record.servicio,
-    vehiculoDetenido: record.vehiculoDetenido,
-    motocicletaDetenida: record.motocicletaDetenida,
-    consignacionVehiculo: record.consignacionVehiculo,
-    consignacionMotocicleta: record.consignacionMotocicleta,
-    soloInfraccion: record.soloInfraccion,
+    clase: record.clase,
+    tipo: record.tipo,
+    marca: record.marca,
+    modelo: record.modelo,
+    color: record.color,
+    placas: record.placas,
+    estadoPlacas: record.estadoPlacas,
+    serie: record.serie,
+    motor: record.motor,
+    municipio: record.municipio,
+    agencia: record.agencia,
+    colonia: record.colonia,
+    calle: record.calle,
+    m1: record.m1 ?? "",
+    m2: record.m2 ?? "",
+    m3: record.m3 ?? "",
+    m4: record.m4 ?? "",
+    situacionVehiculo: record.situacionVehiculo,
+    claveOficial: record.claveOficial,
+    numeroParteInformativo: record.numeroParteInformativo ?? "",
+    nombreOperativo: record.nombreOperativo,
+    sitioServicioPublico: record.sitioServicioPublico ?? "",
+    monto: record.monto ?? 0,
+    estatus: record.estatus,
   };
 }
 
-/**
- * Vista para consultar, editar o eliminar una infracción.
- */
 function InfraccionDetailPage() {
   const { folio } = useParams();
   const navigate = useNavigate();
@@ -81,7 +87,7 @@ function InfraccionDetailPage() {
     setSubmitting(true);
     setSuccessMessage(null);
     try {
-      const { folio: _ignored, ...updateDto } = payload;
+      const { folioInfraccion: _ignored, ...updateDto } = payload;
       await infraccionesService.update(folio, updateDto, token);
       setSuccessMessage("Infracción actualizada correctamente");
       await loadRecord();
@@ -124,8 +130,13 @@ function InfraccionDetailPage() {
       <header className="section-header">
         <div>
           <h2>Detalle de infracción</h2>
-          <p>Folio {folio}</p>
+          <p>Folio {record.folioInfraccion}</p>
         </div>
+        {record?.encierroRegistro ? (
+          <button type="button" onClick={() => navigate(`/encierros/${record.folioInfraccion}`)} disabled={submitting}>
+            Detalle encierro
+          </button>
+        ) : null}
         {canDelete && (
           <button type="button" onClick={handleDelete} disabled={submitting}>
             Eliminar
@@ -136,67 +147,189 @@ function InfraccionDetailPage() {
       {successMessage ? <p className="success-text">{successMessage}</p> : null}
 
       {canUpdate ? (
-        <InfraccionForm
-          initialValues={initialValues}
-          onSubmit={handleUpdate}
-          submitting={submitting}
-          submitLabel="Actualizar"
-          showFolio={false}
-          allowStatus
-        />
+        <>
+          <InfraccionForm
+            initialValues={initialValues}
+            onSubmit={handleUpdate}
+            submitting={submitting}
+            submitLabel="Actualizar"
+            showFolio={false}
+            allowStatus
+          />
+        </>
       ) : (
         <article className="detail-panel">
-          <h3>Información de la infracción (solo lectura)</h3>
-          <dl>
-            <dt>Folio</dt>
-            <dd>{record.folio}</dd>
+          <h3>Información de la infracción</h3>
 
-            <dt>Fecha y hora</dt>
-            <dd>{new Date(record.fechaHora).toLocaleString()}</dd>
+          <table className="detail-table">
+            <tbody>
+              <tr>
+                <th>Folio</th>
+                <td>{record.folioInfraccion}</td>
+              </tr>
 
-            <dt>Infractor</dt>
-            <dd>{record.nombreInfractor}</dd>
+              <tr>
+                <th>Encierro</th>
+                <td>{record.situacionVehiculo === "SOLO_INFRACCION" ? "No aplica" : (record.encierro ?? "-")}</td>
+              </tr>
 
-            <dt>Oficial</dt>
-            <dd>{record.nombreOficial}</dd>
+              <tr>
+                <th>Servicio grúa</th>
+                <td>{record.situacionVehiculo === "SOLO_INFRACCION" ? "No aplica" : (record.servicioGrua ?? "-")}</td>
+              </tr>
 
-            <dt>Delegación</dt>
-            <dd>{record.delegacion}</dd>
+              <tr>
+                <th>Fecha</th>
+                <td>{record.fecha}</td>
+              </tr>
 
-            <dt>Detalle</dt>
-            <dd>{record.detalleInfraccion}</dd>
+              <tr>
+                <th>Hora</th>
+                <td>{record.hora?.slice?.(0, 5) ?? record.hora}</td>
+              </tr>
 
-            <dt>Monto</dt>
-            <dd>${record.monto}</dd>
+              <tr>
+                <th>Nombre infractor</th>
+                <td>{record.nombreInfractor}</td>
+              </tr>
 
-            <dt>Estatus</dt>
-            <dd>{record.estatus}</dd>
+              <tr>
+                <th>Género</th>
+                <td>{record.genero}</td>
+              </tr>
 
-            {/* Nuevos campos */}
-            <dt>Vehículo</dt>
-            <dd>{record.vehiculo}</dd>
+              <tr>
+                <th>No. licencia</th>
+                <td>{record.numeroLicencia}</td>
+              </tr>
 
-            <dt>Placas</dt>
-            <dd>{record.placas}</dd>
+              <tr>
+                <th>Servicio</th>
+                <td>{record.servicio}</td>
+              </tr>
 
-            <dt>Servicio</dt>
-            <dd>{record.servicio}</dd>
+              <tr>
+                <th>Clase</th>
+                <td>{record.clase}</td>
+              </tr>
 
-            <dt>Vehículo detenido</dt>
-            <dd>{record.vehiculoDetenido ? "Sí" : "No"}</dd>
+              <tr>
+                <th>Tipo</th>
+                <td>{record.tipo}</td>
+              </tr>
 
-            <dt>Motocicleta detenida</dt>
-            <dd>{record.motocicletaDetenida ? "Sí" : "No"}</dd>
+              <tr>
+                <th>Marca</th>
+                <td>{record.marca}</td>
+              </tr>
 
-            <dt>Consignación vehículo</dt>
-            <dd>{record.consignacionVehiculo ? "Sí" : "No"}</dd>
+              <tr>
+                <th>Modelo</th>
+                <td>{record.modelo}</td>
+              </tr>
 
-            <dt>Consignación motocicleta</dt>
-            <dd>{record.consignacionMotocicleta ? "Sí" : "No"}</dd>
+              <tr>
+                <th>Color</th>
+                <td>{record.color}</td>
+              </tr>
 
-            <dt>Solo infracción</dt>
-            <dd>{record.soloInfraccion ? "Sí" : "No"}</dd>
-          </dl>
+              <tr>
+                <th>Placas</th>
+                <td>{record.placas}</td>
+              </tr>
+
+              <tr>
+                <th>Estado</th>
+                <td>{record.estadoPlacas}</td>
+              </tr>
+
+              <tr>
+                <th>Serie</th>
+                <td>{record.serie}</td>
+              </tr>
+
+              <tr>
+                <th>Motor</th>
+                <td>{record.motor}</td>
+              </tr>
+
+              <tr>
+                <th>Municipio</th>
+                <td>{record.municipio}</td>
+              </tr>
+
+              <tr>
+                <th>Agencia</th>
+                <td>{record.agencia}</td>
+              </tr>
+
+              <tr>
+                <th>Colonia</th>
+                <td>{record.colonia}</td>
+              </tr>
+
+              <tr>
+                <th>Calle</th>
+                <td>{record.calle}</td>
+              </tr>
+
+              <tr>
+                <th>M1</th>
+                <td>{record.m1 ?? "-"}</td>
+              </tr>
+
+              <tr>
+                <th>M2</th>
+                <td>{record.m2 ?? "-"}</td>
+              </tr>
+
+              <tr>
+                <th>M3</th>
+                <td>{record.m3 ?? "-"}</td>
+              </tr>
+
+              <tr>
+                <th>M4</th>
+                <td>{record.m4 ?? "-"}</td>
+              </tr>
+
+              <tr>
+                <th>Vehículo detenido o solo infracción</th>
+                <td>{record.situacionVehiculo === "VEHICULO_DETENIDO" ? "Vehículo detenido" : "Solo infracción"}</td>
+              </tr>
+
+              <tr>
+                <th>Clave del oficial</th>
+                <td>{record.claveOficial}</td>
+              </tr>
+
+              <tr>
+                <th>No. parte informativo</th>
+                <td>{record.numeroParteInformativo ?? "-"}</td>
+              </tr>
+
+              <tr>
+                <th>Nombre operativo</th>
+                <td>{record.nombreOperativo}</td>
+              </tr>
+
+              <tr>
+                <th>Sitio (servicio público)</th>
+                <td>{record.sitioServicioPublico ?? "-"}</td>
+              </tr>
+
+              <tr>
+                <th>Monto</th>
+                <td>${Number(record.monto ?? 0).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</td>
+              </tr>
+
+              <tr>
+                <th>Estatus</th>
+                <td>{record.estatus}</td>
+              </tr>
+            </tbody>
+          </table>
+
           <p>
             Solo los roles {UPDATE_ROLES.join(", ")} pueden editar. Contacta a un administrador si necesitas cambios.
           </p>

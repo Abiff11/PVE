@@ -4,50 +4,19 @@ import { infraccionesService } from "../../services/infracciones";
 import { useAuth } from "../../hooks/useAuth";
 import PaginationControls from "../../components/Table/PaginationControls";
 
-const CREATE_ROLES = ["admin", "capturista"];
-
-/**
- * Mapea los mensajes de error del backend a textos más amigables para la UI.
- */
 function formatErrorMessage(error) {
   const rawMessage = error?.details?.message ?? error?.message ?? "Ocurrió un error inesperado";
   const messages = Array.isArray(rawMessage) ? rawMessage : [rawMessage];
-
-  const friendly = messages
-    .filter(Boolean)
-    .map((msg) => {
-      if (typeof msg !== "string") {
-        return msg;
-      }
-      const normalized = msg.toLowerCase();
-      if (normalized.includes("fecha") && normalized.includes("must match")) {
-        return "La fecha debe tener el formato AAAA-MM-DD (por ejemplo 2026-02-26).";
-      }
-      if (normalized.includes("fechainicio")) {
-        if (normalized.includes("mayor a")) {
-          return "La fecha inicial no puede ser mayor que la fecha final.";
-        }
-        return "La fecha inicial debe tener el formato AAAA-MM-DD.";
-      }
-      if (normalized.includes("fechafin")) {
-        return "La fecha final debe tener el formato AAAA-MM-DD.";
-      }
-      return msg;
-    })
-    .join(" • ");
-
-  return friendly || "Ocurrió un error inesperado";
+  return messages.filter(Boolean).join(" • ") || "Ocurrió un error inesperado";
 }
 
-/**
- * Tabla paginada conectada al endpoint GET /infracciones.
- */
 function InfraccionesListPage() {
   const navigate = useNavigate();
   const { token, role } = useAuth();
   const [filters, setFilters] = useState({
-    delegacion: "",
-    nombreOficial: "",
+    folio: "",
+    municipio: "",
+    claveOficial: "",
     fechaInicio: "",
     fechaFin: "",
   });
@@ -60,9 +29,6 @@ function InfraccionesListPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  /**
-   * Llama al backend con los filtros actuales y actualiza la tabla.
-   */
   const fetchData = async (page = pageState.page) => {
     setLoading(true);
     setError(null);
@@ -93,9 +59,6 @@ function InfraccionesListPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  /**
-   * Controla los inputs de filtros para reflejarlos en el estado local.
-   */
   const handleFilterChange = (event) => {
     const { name, value } = event.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
@@ -108,11 +71,6 @@ function InfraccionesListPage() {
           <h2>Listado de infracciones</h2>
           <p>Consulta, filtra y navega entre los folios registrados.</p>
         </div>
-        {CREATE_ROLES.includes(role) && (
-          <button type="button" onClick={() => navigate("/infracciones/nueva")}>
-            Registrar infracción
-          </button>
-        )}
       </header>
 
       <form
@@ -123,18 +81,16 @@ function InfraccionesListPage() {
         }}
       >
         <label>
-          Delegación
-          <input
-            type="text"
-            name="delegacion"
-            value={filters.delegacion}
-            onChange={handleFilterChange}
-            placeholder="Ej. Alcoholimetro"
-          />
+          Folio
+          <input type="text" name="folio" value={filters.folio} onChange={handleFilterChange} />
         </label>
         <label>
-          Nombre oficial
-          <input type="text" name="nombreOficial" value={filters.nombreOficial} onChange={handleFilterChange} />
+          Municipio
+          <input type="text" name="municipio" value={filters.municipio} onChange={handleFilterChange} />
+        </label>
+        <label>
+          Clave oficial
+          <input type="text" name="claveOficial" value={filters.claveOficial} onChange={handleFilterChange} />
         </label>
         <label>
           Fecha desde
@@ -157,60 +113,41 @@ function InfraccionesListPage() {
           <table>
             <thead>
               <tr>
-                {/* Columnas de identificación básica */}
                 <th>Folio</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Encierro</th>
                 <th>Infractor</th>
-                <th>Oficial</th>
-                <th>Delegación</th>
-                <th>Fecha/Hora</th>
-                <th>Monto</th>
-                <th>Estatus</th>
-                {/* Columnas de vehículo (nuevos campos) */}
-                <th>Vehículo</th>
                 <th>Placas</th>
                 <th>Servicio</th>
-                {/* Columnas de detención y consignación (valores numéricos: cantidad de vehículos/motos) */}
-                <th>Vehículo detenido</th>
-                <th>Motocicleta detenida</th>
-                <th>Solo infracción</th>
-                <th>Consignación vehículo</th>
-                <th>Consignación motocicleta</th>
-                {/* Columna de acciones: enlace al detalle completo del registro */}
+                <th>Municipio</th>
+                <th>Agencia</th>
+                <th>Clave oficial</th>
+                <th>Situación</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {pageState.data.length === 0 ? (
                 <tr>
-                  {/* colSpan debe coincidir con el número total de columnas del thead (17) */}
-                  <td colSpan={17}>No se encontraron registros con los filtros actuales.</td>
+                  <td colSpan={12}>No se encontraron registros con los filtros actuales.</td>
                 </tr>
               ) : (
                 pageState.data.map((item) => (
                   <tr key={item.id}>
-                    {/* Datos de identificación */}
-                    <td>{item.folio}</td>
+                    <td>{item.folioInfraccion}</td>
+                    <td>{item.fecha}</td>
+                    <td>{item.hora?.slice?.(0, 5) ?? item.hora}</td>
+                    <td>{item.situacionVehiculo === "SOLO_INFRACCION" ? "No aplica" : item.encierro}</td>
                     <td>{item.nombreInfractor}</td>
-                    <td>{item.nombreOficial}</td>
-                    <td>{item.delegacion}</td>
-                    <td>{new Date(item.fechaHora).toLocaleString()}</td>
-                    <td>${Number(item.monto).toLocaleString("es-MX")}</td>
-                    <td>{item.estatus}</td>
-                    {/* Datos del vehículo involucrado */}
-                    <td>{item.vehiculo}</td>
                     <td>{item.placas}</td>
                     <td>{item.servicio}</td>
-                    {/* Cantidades numéricas: cuántos vehículos/motos fueron detenidos */}
-                    <td>{Number(item.vehiculoDetenido ?? 0)}</td>
-                    <td>{Number(item.motocicletaDetenida ?? 0)}</td>
-                    {/* soloInfraccion es boolean: true = sin consignación, false = con consignación */}
-                    <td>{item.soloInfraccion ? "Sí" : "No"}</td>
-                    {/* Cantidades de consignaciones realizadas */}
-                    <td>{Number(item.consignacionVehiculo ?? 0)}</td>
-                    <td>{Number(item.consignacionMotocicleta ?? 0)}</td>
-                    {/* Enlace al detalle completo del registro */}
+                    <td>{item.municipio}</td>
+                    <td>{item.agencia}</td>
+                    <td>{item.claveOficial}</td>
+                    <td>{item.situacionVehiculo === "VEHICULO_DETENIDO" ? "Vehículo detenido" : "Solo infracción"}</td>
                     <td>
-                      <Link to={`/infracciones/${item.folio}`}>Ver detalle</Link>
+                      <Link to={`/infracciones/${item.folioInfraccion}`}>Ver detalle</Link>
                     </td>
                   </tr>
                 ))

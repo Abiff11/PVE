@@ -12,11 +12,11 @@ const config = {
   username: environment.DB_USERNAME,
   password: environment.DB_PASSWORD,
   autoLoadEntities: true,
-  synchronize: !isProduction,      // solo en desarrollo
+  synchronize: !isProduction, // solo en desarrollo
   logging: !isProduction,
-  dropSchema: false,                // ¡nunca en true!
+  dropSchema: false, // ¡nunca en true!
   migrations: ['dist/migrations/*.js'],
-  migrationsRun: isProduction,       // ejecutar migraciones automáticamente en producción
+  migrationsRun: isProduction, // ejecutar migraciones automáticamente en producción
 };
 
 // Exportamos con registerAs para que ConfigModule pueda cargarlo

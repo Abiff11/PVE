@@ -8,7 +8,7 @@ function PublicLayout() {
   return (
     <div className="public-layout">
       <header className="public-layout__header">
-        <h1>PVE</h1>
+        <h1>Dirección General de la Policia Vial</h1>
         <p>Plataforma de Verificación Estatal</p>
       </header>
       <div className="public-layout__content">

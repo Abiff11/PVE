@@ -5,6 +5,8 @@ import DashboardPage from "../pages/Dashboard/Dashboard";
 import InfraccionesListPage from "../pages/InfraccionesList/InfraccionesList";
 import InfraccionDetailPage from "../pages/InfraccionDetail/InfraccionDetail";
 import NuevaInfraccionPage from "../pages/NuevaInfraccion/NuevaInfraccion";
+import EncierroDetailPage from "../pages/EncierroDetail/EncierroDetail";
+import EncierrosPage from "../pages/Encierros/Encierros";
 import UsersDashboard from "../pages/Users/UsersDashboard";
 import BitacoraPage from "../pages/Bitacora/Bitacora";
 import PublicLayout from "../components/Layout/PublicLayout";
@@ -93,6 +95,22 @@ export function AppRouter() {
             element={
               <PrivateRoute allowedRoles={ALL_ROLES}>
                 <InfraccionDetailPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/encierros/:folio"
+            element={
+              <PrivateRoute allowedRoles={ALL_ROLES}>
+                <EncierroDetailPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/encierros"
+            element={
+              <PrivateRoute allowedRoles={ALL_ROLES}>
+                <EncierrosPage />
               </PrivateRoute>
             }
           />

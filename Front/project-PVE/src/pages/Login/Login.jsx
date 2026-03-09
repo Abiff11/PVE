@@ -42,7 +42,7 @@ function LoginPage() {
   return (
     <main className="login-page">
       <section className="login-card">
-        <h1>PVE - Acceso</h1>
+        <h1>Acceso</h1>
         <p>Introduce tus credenciales asignadas por el administrador.</p>
         <form onSubmit={handleSubmit}>
           <label>

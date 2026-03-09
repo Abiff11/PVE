@@ -19,12 +19,35 @@
   width: 100%;
   max-width: 420px;
 }
+/* tabla de detalles no admin*/
+.detail-table {
+  width: 80%;
+  margin: 20px auto;
+  border-collapse: collapse;
+}
+
+.detail-table th,
+.detail-table td {
+  text-align: center;
+  padding: 10px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.detail-table th {
+  background: #f5f5f5;
+  font-weight: 600;
+}
+
+.detail-table tr:hover {
+  background: #fafafa;
+}
 
 .login-page .login-card {
   background-color: #ffffff;
   border-radius: 16px;
   padding: 2rem;
   box-shadow: 0 10px 40px rgba(15, 23, 42, 0.08);
+  text-align: center;
 }
 
 .login-page form {
@@ -223,7 +246,7 @@ td {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #fff;
+  background-color: #ffffff;
   padding: 1.25rem;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
@@ -232,14 +255,14 @@ td {
 .pagination button {
   padding: 0.5rem 1rem;
   border: 1px solid #d1d5db;
-  background-color: #fff;
+  background-color: #2563eb;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .pagination button:hover:not(:disabled) {
-  background-color: #f3f4f6;
+  background-color: #1d4ed8;
   border-color: #9ca3af;
 }
 
@@ -251,6 +274,10 @@ td {
 .pagination span {
   color: #6b7280;
   font-weight: 500;
+}
+
+.hasEgreso {
+  text-align: center;
 }
 
 .kpi-grid {

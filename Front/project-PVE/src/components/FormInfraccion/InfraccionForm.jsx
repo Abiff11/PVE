@@ -1,29 +1,50 @@
 import { useEffect, useState } from "react";
+import { DEFAULT_ENCIERRO, DEFAULT_SERVICIO_GRUA, ENCIERRO_OPTIONS, SERVICIO_GRUA_OPTIONS } from "../../catalogos";
 
 const ESTATUS_OPTIONS = [
   { label: "Pendiente", value: "PENDIENTE" },
   { label: "Pagada", value: "PAGADA" },
 ];
 
+const SITUACION_OPTIONS = [
+  { label: "Vehículo detenido", value: "VEHICULO_DETENIDO" },
+  { label: "Solo infracción", value: "SOLO_INFRACCION" },
+];
+
 const DEFAULT_VALUES = {
-  folio: "",
-  nombreInfractor: "",
-  nombreOficial: "",
-  delegacion: "",
-  detalleInfraccion: "",
+  folioInfraccion: "",
+  encierro: DEFAULT_ENCIERRO,
+  servicioGrua: DEFAULT_SERVICIO_GRUA,
   fecha: "",
   hora: "",
-  monto: "",
-  estatus: "PENDIENTE",
-  // Nuevos campos
-  vehiculo: "",
-  placas: "",
+  monto: 0,
+  nombreInfractor: "",
+  genero: "",
+  numeroLicencia: "",
   servicio: "",
-  vehiculoDetenido: 0,
-  motocicletaDetenida: 0,
-  consignacionVehiculo: 0,
-  consignacionMotocicleta: 0,
-  soloInfraccion: true,
+  clase: "",
+  tipo: "",
+  marca: "",
+  modelo: "",
+  color: "",
+  placas: "",
+  estadoPlacas: "",
+  serie: "",
+  motor: "",
+  municipio: "",
+  agencia: "",
+  colonia: "",
+  calle: "",
+  m1: "",
+  m2: "",
+  m3: "",
+  m4: "",
+  situacionVehiculo: "SOLO_INFRACCION",
+  claveOficial: "",
+  numeroParteInformativo: "",
+  nombreOperativo: "",
+  sitioServicioPublico: "",
+  estatus: "PENDIENTE",
 };
 
 const hydrateValues = (values = {}) => ({
@@ -31,10 +52,6 @@ const hydrateValues = (values = {}) => ({
   ...values,
 });
 
-/**
- * Formularios de creación/edición comparten este componente.
- * Controla inputs, validaciones básicas y delega el envío al callback recibido.
- */
 function InfraccionForm({
   initialValues,
   onSubmit,
@@ -46,51 +63,56 @@ function InfraccionForm({
   const [formData, setFormData] = useState(hydrateValues(initialValues));
   const [error, setError] = useState(null);
 
+  const isSoloInfraccion = formData.situacionVehiculo === "SOLO_INFRACCION";
+
   useEffect(() => {
     setFormData(hydrateValues(initialValues));
   }, [initialValues]);
 
+  useEffect(() => {
+    if (!isSoloInfraccion) return;
+
+    // When it's a solo infracción, force encierro/grúa back to defaults and prevent editing.
+    setFormData((prev) => ({
+      ...prev,
+      encierro: DEFAULT_ENCIERRO,
+      servicioGrua: DEFAULT_SERVICIO_GRUA,
+    }));
+  }, [isSoloInfraccion]);
+
   const updateField = (event) => {
-    const { name, value, type, checked } = event.target;
-
-    let newValue;
-    if (type === "checkbox") {
-      // soloInfraccion es boolean en el backend (true/false),
-      // mientras que los campos de detención/consignación son enteros (0/1).
-      // Los tratamos de forma diferente para mantener coherencia de tipos.
-      if (name === "soloInfraccion") {
-        newValue = checked; // boolean: true o false
-      } else {
-        newValue = checked ? 1 : 0; // entero: 1 o 0
-      }
-    } else {
-      newValue = value;
-    }
-
-    setFormData((prev) => ({ ...prev, [name]: newValue }));
+    const { name, type, value, checked } = event.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
-  /**
-   * Validación mínima alineada con los DTOs:
-   * - Todos los campos obligatorios.
-   * - Hora debe respetar formato HH:mm.
-   * - Monto debe ser positivo.
-   * - Los campos numéricos (vehiculoDetenido, etc.) deben ser >= 0.
-   */
   const validate = () => {
     const requiredFields = [
-      ...(showFolio ? ["folio"] : []),
-      "nombreInfractor",
-      "nombreOficial",
-      "delegacion",
-      "detalleInfraccion",
+      ...(showFolio ? ["folioInfraccion"] : []),
       "fecha",
       "hora",
-      "monto",
-      // Nuevos campos de texto obligatorios
-      "vehiculo",
-      "placas",
+      "nombreInfractor",
+      "genero",
+      "numeroLicencia",
       "servicio",
+      "clase",
+      "tipo",
+      "marca",
+      "modelo",
+      "color",
+      "placas",
+      "estadoPlacas",
+      "serie",
+      "motor",
+      "municipio",
+      "agencia",
+      "colonia",
+      "calle",
+      "situacionVehiculo",
+      "claveOficial",
+      "nombreOperativo",
     ];
 
     for (const field of requiredFields) {
@@ -107,23 +129,6 @@ function InfraccionForm({
       return "La hora debe tener formato HH:mm";
     }
 
-    if (Number(formData.monto) <= 0) {
-      return "El monto debe ser mayor que cero";
-    }
-
-    // Validar que los campos numéricos no sean negativos
-    const numericFields = [
-      "vehiculoDetenido",
-      "motocicletaDetenida",
-      "consignacionVehiculo",
-      "consignacionMotocicleta",
-    ];
-    for (const field of numericFields) {
-      if (formData[field] < 0) {
-        return `El campo ${field} no puede ser negativo`;
-      }
-    }
-
     return null;
   };
 
@@ -135,21 +140,24 @@ function InfraccionForm({
       return;
     }
     setError(null);
-    const payload = {
-      ...formData,
-      monto: Number(formData.monto),
-      // Los campos de detención/consignación son enteros en el backend (0 o 1)
-      vehiculoDetenido: Number(formData.vehiculoDetenido),
-      motocicletaDetenida: Number(formData.motocicletaDetenida),
-      consignacionVehiculo: Number(formData.consignacionVehiculo),
-      consignacionMotocicleta: Number(formData.consignacionMotocicleta),
-      // soloInfraccion es boolean en el backend: Boolean(0) === false, Boolean(1) === true
-      soloInfraccion: Boolean(formData.soloInfraccion),
-    };
 
+    const payload = { ...formData };
     if (!allowStatus) {
       delete payload.estatus;
+      delete payload.monto;
     }
+
+    if (payload.monto === "") {
+      delete payload.monto;
+    } else if (payload.monto !== undefined) {
+      payload.monto = Number(payload.monto);
+    }
+
+    Object.keys(payload).forEach((key) => {
+      if (typeof payload[key] === "string" && payload[key].trim() === "") {
+        delete payload[key];
+      }
+    });
 
     await onSubmit(payload);
   };
@@ -158,11 +166,11 @@ function InfraccionForm({
     <form className="infraccion-form" onSubmit={handleSubmit}>
       {showFolio && (
         <label>
-          Folio
+          Folio infracción
           <input
             type="text"
-            name="folio"
-            value={formData.folio}
+            name="folioInfraccion"
+            value={formData.folioInfraccion}
             onChange={updateField}
             disabled={submitting}
             required
@@ -170,56 +178,9 @@ function InfraccionForm({
         </label>
       )}
 
-      <label>
-        Nombre del infractor
-        <input
-          type="text"
-          name="nombreInfractor"
-          value={formData.nombreInfractor}
-          onChange={updateField}
-          disabled={submitting}
-          required
-        />
-      </label>
-
-      <label>
-        Nombre del oficial
-        <input
-          type="text"
-          name="nombreOficial"
-          value={formData.nombreOficial}
-          onChange={updateField}
-          disabled={submitting}
-          required
-        />
-      </label>
-
-      <label>
-        Delegación
-        <input
-          type="text"
-          name="delegacion"
-          value={formData.delegacion}
-          onChange={updateField}
-          disabled={submitting}
-          required
-        />
-      </label>
-
-      <label>
-        Detalle
-        <textarea
-          name="detalleInfraccion"
-          value={formData.detalleInfraccion}
-          onChange={updateField}
-          disabled={submitting}
-          required
-        />
-      </label>
-
       <div className="form-grid">
         <label>
-          Fecha (YYYY-MM-DD)
+          Fecha
           <input
             type="date"
             name="fecha"
@@ -231,118 +192,344 @@ function InfraccionForm({
         </label>
 
         <label>
-          Hora (HH:mm)
+          Hora
           <input type="time" name="hora" value={formData.hora} onChange={updateField} disabled={submitting} required />
         </label>
+      </div>
 
+      <label>
+        Nombre infractor
+        <input
+          type="text"
+          name="nombreInfractor"
+          value={formData.nombreInfractor}
+          onChange={updateField}
+          disabled={submitting}
+          required
+        />
+      </label>
+
+      <div className="form-grid">
         <label>
-          Monto
+          Género
           <input
-            type="number"
-            name="monto"
-            value={formData.monto}
+            type="text"
+            name="genero"
+            value={formData.genero}
             onChange={updateField}
             disabled={submitting}
-            min="0"
-            step="0.01"
+            required
+          />
+        </label>
+        <label>
+          No. licencia
+          <input
+            type="text"
+            name="numeroLicencia"
+            value={formData.numeroLicencia}
+            onChange={updateField}
+            disabled={submitting}
             required
           />
         </label>
       </div>
 
-      {/* Nuevos campos */}
-      <label>
-        Vehículo
-        <input
-          type="text"
-          name="vehiculo"
-          value={formData.vehiculo}
-          onChange={updateField}
-          disabled={submitting}
-          required
-        />
-      </label>
-
-      <label>
-        Placas
-        <input
-          type="text"
-          name="placas"
-          value={formData.placas}
-          onChange={updateField}
-          disabled={submitting}
-          required
-        />
-      </label>
-
-      <label>
-        Servicio
-        <input
-          type="text"
-          name="servicio"
-          value={formData.servicio}
-          onChange={updateField}
-          disabled={submitting}
-          required
-        />
-      </label>
-
-      <div className="checkbox-group">
+      <div className="form-grid">
         <label>
+          Servicio
           <input
-            type="checkbox"
-            name="vehiculoDetenido"
-            checked={formData.vehiculoDetenido === 1}
+            type="text"
+            name="servicio"
+            value={formData.servicio}
             onChange={updateField}
             disabled={submitting}
+            required
           />
-          Vehículo detenido
         </label>
-
         <label>
+          Sitio (si es servicio público)
           <input
-            type="checkbox"
-            name="motocicletaDetenida"
-            checked={formData.motocicletaDetenida === 1}
+            type="text"
+            name="sitioServicioPublico"
+            value={formData.sitioServicioPublico}
             onChange={updateField}
             disabled={submitting}
           />
-          Motocicleta detenida
-        </label>
-
-        <label>
-          <input
-            type="checkbox"
-            name="consignacionVehiculo"
-            checked={formData.consignacionVehiculo === 1}
-            onChange={updateField}
-            disabled={submitting}
-          />
-          Consignación de vehículo
-        </label>
-
-        <label>
-          <input
-            type="checkbox"
-            name="consignacionMotocicleta"
-            checked={formData.consignacionMotocicleta === 1}
-            onChange={updateField}
-            disabled={submitting}
-          />
-          Consignación de motocicleta
-        </label>
-
-        <label>
-          <input
-            type="checkbox"
-            name="soloInfraccion"
-            checked={formData.soloInfraccion === true}
-            onChange={updateField}
-            disabled={submitting}
-          />
-          Solo infracción (sin consignación)
         </label>
       </div>
+
+      <div className="form-grid">
+        <label>
+          Clase
+          <input
+            type="text"
+            name="clase"
+            value={formData.clase}
+            onChange={updateField}
+            disabled={submitting}
+            required
+          />
+        </label>
+        <label>
+          Tipo
+          <input type="text" name="tipo" value={formData.tipo} onChange={updateField} disabled={submitting} required />
+        </label>
+      </div>
+
+      <div className="form-grid">
+        <label>
+          Marca
+          <input
+            type="text"
+            name="marca"
+            value={formData.marca}
+            onChange={updateField}
+            disabled={submitting}
+            required
+          />
+        </label>
+        <label>
+          Modelo
+          <input
+            type="text"
+            name="modelo"
+            value={formData.modelo}
+            onChange={updateField}
+            disabled={submitting}
+            required
+          />
+        </label>
+      </div>
+
+      <div className="form-grid">
+        <label>
+          Color
+          <input
+            type="text"
+            name="color"
+            value={formData.color}
+            onChange={updateField}
+            disabled={submitting}
+            required
+          />
+        </label>
+        <label>
+          Placas
+          <input
+            type="text"
+            name="placas"
+            value={formData.placas}
+            onChange={updateField}
+            disabled={submitting}
+            required
+          />
+        </label>
+      </div>
+
+      <div className="form-grid">
+        <label>
+          Estado
+          <input
+            type="text"
+            name="estadoPlacas"
+            value={formData.estadoPlacas}
+            onChange={updateField}
+            disabled={submitting}
+            required
+          />
+        </label>
+        <label>
+          Serie
+          <input
+            type="text"
+            name="serie"
+            value={formData.serie}
+            onChange={updateField}
+            disabled={submitting}
+            required
+          />
+        </label>
+      </div>
+
+      <label>
+        Motor
+        <input type="text" name="motor" value={formData.motor} onChange={updateField} disabled={submitting} required />
+      </label>
+
+      <div className="form-grid">
+        <label>
+          Municipio
+          <input
+            type="text"
+            name="municipio"
+            value={formData.municipio}
+            onChange={updateField}
+            disabled={submitting}
+            required
+          />
+        </label>
+        <label>
+          Agencia
+          <input
+            type="text"
+            name="agencia"
+            value={formData.agencia}
+            onChange={updateField}
+            disabled={submitting}
+            required
+          />
+        </label>
+      </div>
+
+      <div className="form-grid">
+        <label>
+          Colonia
+          <input
+            type="text"
+            name="colonia"
+            value={formData.colonia}
+            onChange={updateField}
+            disabled={submitting}
+            required
+          />
+        </label>
+        <label>
+          Calle
+          <input
+            type="text"
+            name="calle"
+            value={formData.calle}
+            onChange={updateField}
+            disabled={submitting}
+            required
+          />
+        </label>
+      </div>
+
+      <div className="form-grid">
+        <label>
+          M1
+          <input type="text" name="m1" value={formData.m1} onChange={updateField} disabled={submitting} />
+        </label>
+        <label>
+          M2
+          <input type="text" name="m2" value={formData.m2} onChange={updateField} disabled={submitting} />
+        </label>
+        <label>
+          M3
+          <input type="text" name="m3" value={formData.m3} onChange={updateField} disabled={submitting} />
+        </label>
+        <label>
+          M4
+          <input type="text" name="m4" value={formData.m4} onChange={updateField} disabled={submitting} />
+        </label>
+      </div>
+
+      <label>
+        Vehículo detenido o solo infracción
+        <select
+          name="situacionVehiculo"
+          value={formData.situacionVehiculo}
+          onChange={updateField}
+          disabled={submitting}
+          required
+        >
+          {SITUACION_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <div className="form-grid">
+        {isSoloInfraccion ? (
+          <>
+            <label>
+              Encierro (Nombre)
+              <input type="text" value="No aplica" disabled />
+            </label>
+            <label>
+              Servicio grúa (Nombre)
+              <input type="text" value="No aplica" disabled />
+            </label>
+          </>
+        ) : (
+          <>
+            <label>
+              Encierro (Nombre)
+              <select name="encierro" value={formData.encierro} onChange={updateField} disabled={submitting}>
+                {ENCIERRO_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Servicio grúa (Nombre)
+              <select name="servicioGrua" value={formData.servicioGrua} onChange={updateField} disabled={submitting}>
+                {SERVICIO_GRUA_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </>
+        )}
+      </div>
+
+      <div className="form-grid">
+        <label>
+          Clave del oficial
+          <input
+            type="text"
+            name="claveOficial"
+            value={formData.claveOficial}
+            onChange={updateField}
+            disabled={submitting}
+            required
+          />
+        </label>
+        <label>
+          No. parte informativo
+          <input
+            type="text"
+            name="numeroParteInformativo"
+            value={formData.numeroParteInformativo}
+            onChange={updateField}
+            disabled={submitting}
+          />
+        </label>
+      </div>
+
+      <label>
+        Nombre operativo
+        <input
+          type="text"
+          name="nombreOperativo"
+          value={formData.nombreOperativo}
+          onChange={updateField}
+          disabled={submitting}
+          required
+        />
+      </label>
+
+      {allowStatus && (
+        <label>
+          Monto ($)
+          <input
+            type="number"
+            name="monto"
+            value={formData.monto ?? 0}
+            onChange={updateField}
+            disabled={submitting}
+            min="0"
+            step="0.01"
+          />
+        </label>
+      )}
 
       {allowStatus && (
         <label>
