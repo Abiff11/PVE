@@ -15,9 +15,6 @@ COPY package*.json ./
 RUN npm install && \
     npm cache clean --force
 
-# Asegurar que nest CLI esté disponible
-RUN npm install @nestjs/cli
-
 # Copiar código fuente
 COPY . .
 
@@ -25,7 +22,7 @@ COPY . .
 # RUN npx prisma generate
 
 # Build de producción
-RUN npm run build
+RUN npx nest build
 
 # ============================================
 # STAGE 2: Producción (imagen final)
