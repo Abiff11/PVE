@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main      # Producción
-      - develop   # Desarrollo
   workflow_dispatch:
     inputs:
       production_url:
@@ -31,34 +30,19 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Determine environment
-        id: env
-        run: |
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "tag=latest" >> $GITHUB_OUTPUT
-            echo "env=production" >> $GITHUB_OUTPUT
-          else
-            echo "tag=develop" >> $GITHUB_OUTPUT
-            echo "env=development" >> $GITHUB_OUTPUT
-          fi
-
       - name: Set API URL for production
         id: api_url
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            # Use production URL from secret or input
-            API_URL="${{ secrets.PRODUCTION_API_URL }}"
-            if [[ -z "$API_URL" ]]; then
-              API_URL="${{ github.event.inputs.production_url }}"
-            fi
-            if [[ -z "$API_URL" ]]; then
-              echo "Warning: No production API URL set!"
-              API_URL="http://localhost:3000"
-            fi
-            echo "url=$API_URL" >> $GITHUB_OUTPUT
-          else
-            echo "url=http://localhost:3000" >> $GITHUB_OUTPUT
+          # Use production URL from secret or input
+          API_URL="${{ secrets.PRODUCTION_API_URL }}"
+          if [[ -z "$API_URL" ]]; then
+            API_URL="${{ github.event.inputs.production_url }}"
           fi
+          if [[ -z "$API_URL" ]]; then
+            echo "Warning: No production API URL set!"
+            API_URL="http://localhost:3000"
+          fi
+          echo "url=$API_URL" >> $GITHUB_OUTPUT
 
       # Build and push Backend
       - name: Build and push Backend
@@ -67,7 +51,7 @@ jobs:
           context: ./Back/project-pve
           file: ./Back/project-pve/Dockerfile
           push: true
-          tags: abiff11/pve-backend:${{ steps.env.outputs.tag }}
+          tags: abiff11/pve-backend:latest
           no-cache: true
 
       # Build and push Frontend
@@ -77,7 +61,7 @@ jobs:
           context: ./Front/project-PVE
           file: ./Front/project-PVE/Dockerfile
           push: true
-          tags: abiff11/pve-frontend:${{ steps.env.outputs.tag }}
+          tags: abiff11/pve-frontend:latest
           build-args: |
             VITE_API_URL=${{ steps.api_url.outputs.url }}
           no-cache: true
@@ -85,7 +69,7 @@ jobs:
       - name: Summary
         run: |
           echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- Environment: ${{ steps.env.outputs.env }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Environment: Production" >> $GITHUB_STEP_SUMMARY
           echo "- API URL: ${{ steps.api_url.outputs.url }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Backend image: abiff11/pve-backend:${{ steps.env.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Frontend image: abiff11/pve-frontend:${{ steps.env.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend image: abiff11/pve-backend:latest" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend image: abiff11/pve-frontend:latest" >> $GITHUB_STEP_SUMMARY

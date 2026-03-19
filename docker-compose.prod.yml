@@ -38,7 +38,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
       JWT_SECRET: ${JWT_SECRET}
-      FRONT_ORIGINS: ${FRONTEND_URL}
+      FRONT_ORIGINS: ${FRONTEND_URL:-https://pve-frontend.onrender.com}
     ports:
       - "3000:3000"
     depends_on:
@@ -53,10 +53,8 @@ services:
       context: ./Front/project-PVE
       dockerfile: Dockerfile
       target: production
-      # Usamos la URL interna de Docker para que el frontend
-      # se comunique directamente con el backend dentro de la red
       args:
-        VITE_API_URL: http://backend:3000
+        VITE_API_URL: ${VITE_API_URL:-http://backend:3000}
     container_name: pve-frontend-prod
     restart: always
     ports:

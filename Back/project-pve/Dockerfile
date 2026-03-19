@@ -12,7 +12,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Instalar todas las dependencias (incluyendo devDependencies para nest CLI)
-RUN npm install && \
+RUN npm install --include=dev && \
     npm cache clean --force
 
 # Copiar código fuente
