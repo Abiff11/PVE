@@ -15,6 +15,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     
     steps:
       - name: Checkout code
@@ -66,8 +68,7 @@ jobs:
           file: ./Back/project-pve/Dockerfile
           push: true
           tags: abiff11/pve-backend:${{ steps.env.outputs.tag }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          no-cache: true
 
       # Build and push Frontend
       - name: Build and push Frontend
@@ -79,8 +80,7 @@ jobs:
           tags: abiff11/pve-frontend:${{ steps.env.outputs.tag }}
           build-args: |
             VITE_API_URL=${{ steps.api_url.outputs.url }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          no-cache: true
 
       - name: Summary
         run: |

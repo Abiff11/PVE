@@ -2,7 +2,7 @@
  * Cliente HTTP del front: centraliza baseURL, headers y manejo de errores.
  * Así evitamos repetir `fetch` y garantizamos que todas las peticiones usen el mismo formato.
  */
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
 /**
  * Ejecuta una petición al backend Nest.
@@ -10,15 +10,10 @@ const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
  * @param {object} options - Configuración opcional (método, body, token JWT).
  */
 export async function apiRequest(path, options = {}) {
-  const {
-    method = 'GET',
-    body,
-    token,
-    headers: customHeaders = {},
-  } = options;
+  const { method = "GET", body, token, headers: customHeaders = {} } = options;
 
   const headers = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     ...customHeaders,
   };
 
@@ -47,7 +42,7 @@ export async function apiRequest(path, options = {}) {
   const data = await parseBody();
 
   if (!response.ok) {
-    const error = new Error(data?.message ?? 'Error al consultar el backend');
+    const error = new Error(data?.message ?? "Error al consultar el backend");
     error.status = response.status;
     error.details = data;
     throw error;
