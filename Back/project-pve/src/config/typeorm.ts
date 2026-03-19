@@ -12,7 +12,7 @@ const config = {
   username: environment.DB_USERNAME,
   password: environment.DB_PASSWORD,
   autoLoadEntities: true,
-  synchronize: !isProduction, // solo en desarrollo
+  synchronize: true, // solo en desarrollo !isProduction
   logging: !isProduction,
   dropSchema: false, // ¡nunca en true!
   migrations: ['dist/migrations/*.js'],
