@@ -1,7 +1,7 @@
 # Dockerfile para React Frontend con Vite
-# Usamos node:18-alpine para construir
+# Usamos node:20-alpine para compatibilidad con Vite 7
 
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 # Argumento para la URL del API
 ARG VITE_API_URL=http://localhost:3000
@@ -44,7 +44,7 @@ CMD ["nginx", "-g", "daemon off;"]
 # ============================================
 # STAGE: Desarrollo (alternativo)
 # ============================================
-FROM node:18-alpine AS development
+FROM node:20-alpine AS development
 
 WORKDIR /app
 

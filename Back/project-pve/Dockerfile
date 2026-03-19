@@ -1,7 +1,7 @@
 # Dockerfile para NestJS Backend
-# Usamos node:18-alpine para una imagen ligera
+# Usamos node:20-alpine para compatibilidad
 
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 # Argumento para modo de build
 ARG NODE_ENV=production
@@ -27,7 +27,7 @@ RUN npm run build
 # ============================================
 # STAGE 2: Producción (imagen final)
 # ============================================
-FROM node:18-alpine AS production
+FROM node:20-alpine AS production
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
@@ -70,7 +70,7 @@ CMD ["node", "dist/main"]
 # ============================================
 # STAGE: Desarrollo (alternativo)
 # ============================================
-FROM node:18-alpine AS development
+FROM node:20-alpine AS development
 
 WORKDIR /app
 
