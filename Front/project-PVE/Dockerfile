@@ -41,24 +41,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 # Iniciar nginx
 CMD ["nginx", "-g", "daemon off;"]
 
-# ============================================
-# STAGE: Desarrollo (alternativo)
-# ============================================
-FROM node:20-alpine AS development
 
-WORKDIR /app
-
-# Copiar package files
-COPY package*.json ./
-
-# Instalar todas las dependencias
-RUN npm install
-
-# Copiar código fuente
-COPY . .
-
-# Exponer puerto de Vite
-EXPOSE 5173
-
-# Comando para desarrollo (hot reload)
-CMD ["npm", "run", "dev", "--", "--host"]

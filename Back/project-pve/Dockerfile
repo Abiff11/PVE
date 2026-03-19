@@ -67,24 +67,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 # Comando de inicio
 CMD ["node", "dist/main"]
 
-# ============================================
-# STAGE: Desarrollo (alternativo)
-# ============================================
-FROM node:20-alpine AS development
 
-WORKDIR /app
-
-# Copiar package files
-COPY package*.json ./
-
-# Instalar todas las dependencias (incluyendo dev)
-RUN npm install
-
-# Copiar código fuente
-COPY . .
-
-# Exponer puerto
-EXPOSE 3000
-
-# Comando para desarrollo (watch mode)
-CMD ["npm", "run", "start:dev"]
