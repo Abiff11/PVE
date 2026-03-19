@@ -15,6 +15,9 @@ COPY package*.json ./
 RUN npm install && \
     npm cache clean --force
 
+# Asegurar que nest CLI esté disponible
+RUN npm install @nestjs/cli
+
 # Copiar código fuente
 COPY . .
 
