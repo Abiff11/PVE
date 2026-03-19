@@ -1,3 +1,7 @@
+---
+alias: "Planificación"
+---
+
 # Fase 1: Planificación
 
 ## 1.1 Definición del Proyecto

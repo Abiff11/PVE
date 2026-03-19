@@ -1,0 +1,44 @@
+# Dependencies
+node_modules
+npm-debug.log*
+
+# Build outputs
+dist
+build
+
+# Test coverage
+coverage
+.nyc_output
+
+# Environment files (usar vars de Docker en vez de archivos)
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Logs
+logs
+*.log
+
+# Test files
+*.spec.ts
+*.e2e-spec.ts
+jest.config.js
+test
+
+# Misc
+README.md
+*.md

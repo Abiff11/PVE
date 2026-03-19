@@ -1,3 +1,7 @@
+---
+alias: "Mantenimiento"
+---
+
 # Fase 7: Mantenimiento
 
 ## 7.1 Tipos de Mantenimiento

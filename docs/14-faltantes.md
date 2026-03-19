@@ -1,3 +1,7 @@
+---
+alias: "Faltantes"
+---
+
 # Identificación de Faltantes y Plan de Desarrollo
 
 ## Resumen Ejecutivo
@@ -6,15 +10,15 @@ Tras realizar ingeniería inversa del código existente, se ha identificado el e
 
 ### Estado General
 
-| Fase | Estado | Completitud |
-|------|--------|-------------|
-| Planificación | ✅ Documentado | 100% |
-| Análisis de Requisitos | ✅ Documentado | 100% |
-| Diseño | ✅ Documentado | 100% |
-| Desarrollo | ⚠️ Parcial | ~85% |
-| Pruebas | ⚠️ Parcial | ~20% |
-| Implementación | ✅ Documentado | 100% |
-| Mantenimiento | ✅ Documentado | 100% |
+| Fase                   | Estado         | Completitud |
+| ---------------------- | -------------- | ----------- |
+| Planificación          | ✅ Documentado | 100%        |
+| Análisis de Requisitos | ✅ Documentado | 100%        |
+| Diseño                 | ✅ Documentado | 100%        |
+| Desarrollo             | ⚠️ Parcial     | ~85%        |
+| Pruebas                | ⚠️ Parcial     | ~20%        |
+| Implementación         | ✅ Documentado | 100%        |
+| Mantenimiento          | ✅ Documentado | 100%        |
 
 ---
 
@@ -22,51 +26,51 @@ Tras realizar ingeniería inversa del código existente, se ha identificado el e
 
 ### 1. Pruebas (Prioridad Alta)
 
-| Item | Estado Actual | Estado Deseado | Prioridad |
-|------|--------------|----------------|----------|
-| Tests unitarios Auth | ⚠️ Parcial | 80% cobertura | Alta |
-| Tests unitarios Infracciones | ⚠️ Parcial | 80% cobertura | Alta |
-| Tests unitarios Encierros | ❌ Pendiente | 70% cobertura | Alta |
-| Tests unitarios Users | ⚠️ Parcial | 70% cobertura | Alta |
-| Tests unitarios Bitácora | ❌ Pendiente | 60% cobertura | Media |
-| Tests integración | ❌ Pendiente | 50% cobertura | Alta |
-| Tests E2E | ❌ Pendiente | 30% cobertura | Media |
-| Tests Frontend | ❌ Pendiente | 60% cobertura | Alta |
+| Item                         | Estado Actual | Estado Deseado | Prioridad |
+| ---------------------------- | ------------- | -------------- | --------- |
+| Tests unitarios Auth         | ⚠️ Parcial    | 80% cobertura  | Alta      |
+| Tests unitarios Infracciones | ⚠️ Parcial    | 80% cobertura  | Alta      |
+| Tests unitarios Encierros    | ❌ Pendiente  | 70% cobertura  | Alta      |
+| Tests unitarios Users        | ⚠️ Parcial    | 70% cobertura  | Alta      |
+| Tests unitarios Bitácora     | ❌ Pendiente  | 60% cobertura  | Media     |
+| Tests integración            | ❌ Pendiente  | 50% cobertura  | Alta      |
+| Tests E2E                    | ❌ Pendiente  | 30% cobertura  | Media     |
+| Tests Frontend               | ❌ Pendiente  | 60% cobertura  | Alta      |
 
 ### 2. Documentación (Prioridad Media)
 
-| Item | Estado | Notas |
-|------|--------|-------|
-| README principal | ✅ Actualizado | Puede mejorarse |
-| CHANGELOG | ❌ Pendiente | Crear |
-| Contribución guide | ❌ Pendiente | Crear |
-| API documentation | ✅ Existe | Swagger pendiente |
+| Item               | Estado         | Notas             |
+| ------------------ | -------------- | ----------------- |
+| README principal   | ✅ Actualizado | Puede mejorarse   |
+| CHANGELOG          | ❌ Pendiente   | Crear             |
+| Contribución guide | ❌ Pendiente   | Crear             |
+| API documentation  | ✅ Existe      | Swagger pendiente |
 
 ### 3. Funcionalidades Extras (Prioridad Baja)
 
-| Item | Estado | Notas |
-|------|--------|-------|
-| Exportación PDF | ❌ Pendiente | Roadmap |
+| Item               | Estado       | Notas   |
+| ------------------ | ------------ | ------- |
+| Exportación PDF    | ❌ Pendiente | Roadmap |
 | Dashboard avanzado | ❌ Pendiente | Roadmap |
-| Notificaciones | ❌ Pendiente | Roadmap |
-| API pública | ❌ Pendiente | Roadmap |
+| Notificaciones     | ❌ Pendiente | Roadmap |
+| API pública        | ❌ Pendiente | Roadmap |
 
 ### 4. Seguridad (Prioridad Media)
 
-| Item | Estado | Notas |
-|------|--------|-------|
-| Rate limiting | ❌ Pendiente | Agregar throttling |
-| Helmet.js | ❌ Pendiente | Descomentar en main.ts |
-| Logging estructurado | ❌ Pendiente | Agregar winston/pino |
-| Input sanitization | ⚠️ Parcial | Mejorar |
+| Item                 | Estado       | Notas                  |
+| -------------------- | ------------ | ---------------------- |
+| Rate limiting        | ❌ Pendiente | Agregar throttling     |
+| Helmet.js            | ❌ Pendiente | Descomentar en main.ts |
+| Logging estructurado | ❌ Pendiente | Agregar winston/pino   |
+| Input sanitization   | ⚠️ Parcial   | Mejorar                |
 
 ### 5. DevOps (Prioridad Media)
 
-| Item | Estado | Notas |
-|------|--------|-------|
-| CI/CD Pipeline | ❌ Pendiente | Configurar GitHub Actions |
-| Docker | ⚠️ Parcial | Dockerfile básicos |
-| Scripts de despliegue | ⚠️ Parcial | Manual |
+| Item                  | Estado       | Notas                     |
+| --------------------- | ------------ | ------------------------- |
+| CI/CD Pipeline        | ❌ Pendiente | Configurar GitHub Actions |
+| Docker                | ⚠️ Parcial   | Dockerfile básicos        |
+| Scripts de despliegue | ⚠️ Parcial   | Manual                    |
 
 ---
 
@@ -87,6 +91,7 @@ Semana 2:
 ```
 
 **Entregables:**
+
 - 70% cobertura en backend
 - Tests ejecutándose en CI
 
@@ -105,6 +110,7 @@ Semana 2:
 ```
 
 **Entregables:**
+
 - 50% cobertura frontend
 - Smoke tests E2E
 
@@ -125,6 +131,7 @@ Semana 2:
 ```
 
 **Entregables:**
+
 - Pipeline CI/CD funcionando
 - Seguridad reforzada
 
@@ -139,6 +146,7 @@ Semana 1:
 ```
 
 **Entregables:**
+
 - v1.0.0 lista para producción
 
 ---
@@ -154,7 +162,7 @@ npm install
 cp .env.example .env.development
 # Configurar credenciales de BD
 
-# Frontend  
+# Frontend
 cd Front/project-PVE
 npm install
 echo "VITE_API_URL=http://localhost:3000" > .env.local
@@ -218,17 +226,17 @@ npm test
 
 ### Documentación del Ciclo de Vida
 
-| Archivo | Ruta | Estado |
-|---------|------|--------|
-| Índice | `docs/ciclo-vida/README.md` | ✅ Creado |
-| Planificación | `docs/ciclo-vida/planificacion.md` | ✅ Creado |
-| Análisis de Requisitos | `docs/ciclo-vida/analisis-requisitos.md` | ✅ Creado |
-| Diseño | `docs/ciclo-vida/diseno.md` | ✅ Creado |
-| Desarrollo | `docs/ciclo-vida/desarrollo.md` | ✅ Creado |
-| Pruebas | `docs/ciclo-vida/pruebas.md` | ✅ Creado |
-| Implementación | `docs/ciclo-vida/implementacion.md` | ✅ Creado |
-| Mantenimiento | `docs/ciclo-vida/mantenimiento.md` | ✅ Creado |
-| Faltantes y Plan | `docs/ciclo-vida/faltantes.md` | ✅ Creado |
+| Archivo                | Ruta                       | Estado         |
+| ---------------------- | -------------------------- | -------------- |
+| Índice                 | [[00-README]]              | ✅ Actualizado |
+| Planificación          | [[06-planificacion]]       | ✅ Creado      |
+| Análisis de Requisitos | [[07-analisis-requisitos]] | ✅ Creado      |
+| Diseño                 | [[08-diseno]]              | ✅ Creado      |
+| Desarrollo             | [[09-desarrollo]]          | ✅ Creado      |
+| Pruebas                | [[10-pruebas]]             | ✅ Creado      |
+| Implementación         | [[11-implementacion]]      | ✅ Creado      |
+| Mantenimiento          | [[12-mantenimiento]]       | ✅ Creado      |
+| Faltantes y Plan       | [[14-faltantes]]           | ✅ Creado      |
 
 ---
 

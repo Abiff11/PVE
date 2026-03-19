@@ -1,3 +1,7 @@
+---
+alias: "Arquitectura"
+---
+
 # Arquitectura del Sistema
 
 ## Visión General

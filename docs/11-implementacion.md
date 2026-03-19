@@ -1,3 +1,7 @@
+---
+alias: "Implementación"
+---
+
 # Fase 6: Implementación
 
 ## 6.1 Entornos

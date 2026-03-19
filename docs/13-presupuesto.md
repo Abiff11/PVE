@@ -1,3 +1,7 @@
+---
+alias: "Presupuesto"
+---
+
 # Estimación de Valor del Proyecto PVE
 
 ## Resumen de la Valuación

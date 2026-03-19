@@ -1,0 +1,47 @@
+# Dependencies
+node_modules
+npm-debug.log*
+
+# Build outputs
+dist
+build
+
+# Test coverage
+coverage
+.nyc_output
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Logs
+logs
+*.log
+
+# Test files
+*.spec.jsx
+*.spec.js
+*.e2e-spec.jsx
+*.e2e-spec.js
+
+# Misc
+README.md
+*.md
+
+# Vite cache
+.vite

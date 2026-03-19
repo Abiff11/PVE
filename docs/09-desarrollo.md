@@ -1,3 +1,7 @@
+---
+alias: "Desarrollo"
+---
+
 # Fase 4: Desarrollo
 
 ## 4.1 Estado Actual del Proyecto
@@ -130,7 +134,6 @@ PVE/
 │       └── .env
 │
 └── docs/                              # Documentación
-    ├── ciclo-vida/
     ├── api.md
     ├── arquitectura.md
     ├── base-de-datos.md

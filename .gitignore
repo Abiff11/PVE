@@ -1,4 +1,18 @@
 **/node_modules/
-
-
 **/dist/
+
+# Environment files (secretos)
+.env
+.env.*
+!.env.example
+
+# Docker
+docker-compose.override.yml
+
+# IDE
+**/.idea/
+**/.vscode/
+
+# OS
+.DS_Store
+Thumbs.db

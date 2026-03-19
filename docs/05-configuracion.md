@@ -1,3 +1,7 @@
+---
+alias: "Configuración"
+---
+
 # Configuración y Arranque
 
 ## Requisitos Previos
@@ -7,6 +11,8 @@
 | Node.js     | 18+            |
 | npm         | 9+             |
 | PostgreSQL  | 14+            |
+| **Docker**  | **20+**        |
+| **Docker Compose** | **2+** |
 
 ---
 
@@ -212,6 +218,87 @@ npm run build
 
 2. **CORS**: Configurar `FRONT_ORIGINS` con el dominio exacto del frontend.
 
+---
+
+## Docker
+
+### Archivos Creados
+
+| Archivo | Descripción |
+|---------|-------------|
+| `docker-compose.yml` | Orquestación para desarrollo local |
+| `docker-compose.prod.yml` | Orquestación para producción |
+| `Back/project-pve/Dockerfile` | Imagen multi-stage del backend NestJS |
+| `Front/project-PVE/Dockerfile` | Imagen multi-stage del frontend React + Nginx |
+| `Front/project-PVE/nginx.conf` | Configuración de Nginx para SPA con seguridad |
+| `.env` | Variables de entorno (NO commitear) |
+| `.env.production.example` | Plantilla para producción |
+
+### Desarrollo Local con Docker
+
+```bash
+# Los archivos .env ya están configurados
+# Iniciar todos los servicios
+docker-compose up -d
+
+# Ver logs
+docker-compose logs -f
+
+# Detener servicios
+docker-compose down
+```
+
+**Servicios disponibles:**
+
+| Servicio | URL | Descripción |
+|----------|-----|-------------|
+| Frontend | http://localhost:5173 | React + Vite (hot reload) |
+| Backend | http://localhost:3000 | NestJS API (hot reload) |
+| PostgreSQL | localhost:5432 | Base de datos |
+
+### Producción con Docker
+
+```bash
+# 1. Usar la plantilla de producción
+cp .env.production.example .env
+# Editar .env con valores de producción reales
+
+# 2. Build y start (production mode)
+docker-compose -f docker-compose.prod.yml up -d --build
+
+# 3. Ver logs
+docker-compose -f docker-compose.prod.yml logs -f
+
+# 4. Detener
+docker-compose -f docker-compose.prod.yml down
+```
+
+**Producción - Puertos:**
+
+| Servicio | Puerto |
+|----------|--------|
+| Frontend (Nginx) | 80 |
+| Backend API | 3000 |
+| PostgreSQL | 5432 |
+
+### Comandos Útiles
+
+```bash
+# Rebuild sin cache
+docker-compose build --no-cache
+
+# Entrar al contenedor
+docker exec -it pve-backend sh
+docker exec -it pve-frontend sh
+docker exec -it pve-db psql -U postgres
+
+# Ver uso de recursos
+docker stats
+
+# Limpiar volúmenes (cuidado: borra datos)
+docker-compose down -v
+```
+
 3. **Helmet**: El código incluye comentarios para activar `helmet` en `main.ts`:
 
    ```bash
@@ -222,4 +309,4 @@ npm run build
 
 4. **HTTPS**: Usar un proxy inverso (nginx) con certificado SSL/TLS.
 
-5. **Variables de entorno**: Nunca commitear archivos `.env.*` con credenciales reales. El `.gitignore` ya los excluye.
+5. **Variables de entorno**: Nunca commitear archivos `.env` con credenciales reales. El `.gitignore` ya los excluye. El `.env` contiene la configuración de desarrollo y `.env.production.example` sirve como plantilla para producción.

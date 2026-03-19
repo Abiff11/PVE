@@ -1,3 +1,7 @@
+---
+alias: "Análisis de Requisitos"
+---
+
 # Fase 2: Análisis de Requisitos
 
 ## 2.1 Requisitos Funcionales

@@ -1,3 +1,7 @@
+---
+alias: "API"
+---
+
 # Referencia de la API REST
 
 **Base URL:** `http://localhost:3000` (configurable con `HOST` y `PORT`)
@@ -7,6 +11,43 @@ Todos los endpoints (excepto `POST /auth/signin`) requieren el header:
 ```
 Authorization: Bearer <access_token>
 ```
+
+---
+
+## Arquitectura de Autenticación
+
+### Componentes
+
+| Componente | Ubicación | Función |
+|------------|-----------|---------|
+| **AuthGuard** | `@nestjs/passport` | Protege las rutas, valida que el token exista |
+| **JwtStrategy** | [[01-arquitectura]] | Decodifica y valida el JWT con el secret |
+| **RolesGuard** | [[01-arquitectura]] | Verifica roles de usuario |
+
+### Flujo de Autenticación
+
+```
+1. Cliente → POST /auth/signin (username, password)
+2. Servidor → Valida credenciales con bcrypt
+3. Servidor → Genera JWT con payload {sub, username, role}
+4. Cliente → Almacena el token
+5. Cliente → Request subsiguientes: Authorization: Bearer <token>
+6. AuthGuard('jwt') → JwtStrategy.validate() → Extrae usuario
+7. RolesGuard → Verifica permisos por rol
+```
+
+### Uso en Controladores
+
+```typescript
+import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../auth/roles/roles.guard';
+
+@Controller('infracciones')
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+export class InfraccionesController { ... }
+```
+
+> **Nota:** `AuthGuard('jwt')` usa la `JwtStrategy` definida en [[01-arquitectura]]. No es un archivo personalizado, sino una clase proporcionada por `@nestjs/passport`.
 
 ---
 

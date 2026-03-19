@@ -1,3 +1,7 @@
+---
+alias: "Diseño"
+---
+
 # Fase 3: Diseño
 
 ## 3.1 Arquitectura del Sistema

@@ -1,3 +1,7 @@
+---
+alias: "Frontend"
+---
+
 # Frontend — Estructura y Componentes
 
 ## Stack

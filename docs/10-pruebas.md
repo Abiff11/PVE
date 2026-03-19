@@ -1,3 +1,7 @@
+---
+alias: "Pruebas"
+---
+
 # Fase 5: Pruebas
 
 ## 5.1 Estrategia de Pruebas

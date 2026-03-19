@@ -1,3 +1,7 @@
+---
+alias: "Base de Datos"
+---
+
 # Modelo de Datos
 
 ## Diagrama de Entidades
