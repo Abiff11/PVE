@@ -11,8 +11,8 @@ WORKDIR /app
 # Copiar package files primero para caching
 COPY package*.json ./
 
-# Instalar dependencias
-RUN npm ci --if-present && \
+# Instalar todas las dependencias (incluyendo devDependencies para nest CLI)
+RUN npm install && \
     npm cache clean --force
 
 # Copiar código fuente
