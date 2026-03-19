@@ -107,6 +107,26 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
+/* Menu toggle button for mobile */
+.menu-toggle {
+  display: none;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  font-size: 1.25rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.private-layout__header-content {
+  flex: 1;
+}
+
+.user-info {
+  display: inline;
+}
+
 .private-layout__nav {
   display: flex;
   gap: 1rem;
@@ -568,4 +588,296 @@ section > button:disabled {
 .filter-bar button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* ============================================
+ * MEDIA QUERIES - Responsive Design
+ * ============================================
+ */
+
+/* Tablet: 768px - 1024px */
+@media screen and (max-width: 1024px) {
+  .private-layout__header {
+    padding: 1rem 1.25rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .private-layout__header h1 {
+    font-size: 1.25rem;
+  }
+
+  .private-layout__nav {
+    padding: 0.75rem 1.25rem;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+
+  .private-layout__content {
+    padding: 1.5rem;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .section-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .filter-bar {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    padding: 1rem;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+
+  .table-wrapper table {
+    min-width: 1200px;
+  }
+}
+
+/* Mobile: < 768px */
+@media screen and (max-width: 768px) {
+  .public-layout {
+    padding: 1.5rem 0.75rem;
+  }
+
+  .login-page .login-card {
+    padding: 1.5rem 1rem;
+    border-radius: 12px;
+  }
+
+  .private-layout__header {
+    padding: 0.75rem 1rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .private-layout__header-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .private-layout__header h1 {
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .private-layout__header p {
+    font-size: 0.75rem;
+  }
+
+  .menu-toggle {
+    display: block;
+    flex-shrink: 0;
+  }
+
+  .private-layout__user {
+    width: 100%;
+    justify-content: space-between;
+    order: 3;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    margin-top: 0.5rem;
+  }
+
+  .user-info {
+    font-size: 0.85rem;
+  }
+
+  .private-layout__nav {
+    display: none;
+    flex-direction: column;
+    padding: 0.5rem;
+    gap: 0.25rem;
+    background-color: #1e3a8a;
+  }
+
+  .private-layout__nav.open {
+    display: flex;
+  }
+
+  .private-layout__nav a {
+    font-size: 0.9rem;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    color: white;
+  }
+
+  .private-layout__nav a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .private-layout__content {
+    padding: 1rem 0.75rem;
+  }
+
+  .section-header {
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .section-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .filter-bar {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .filter-bar label {
+    font-size: 0.9rem;
+  }
+
+  .filter-bar input,
+  .filter-bar select {
+    font-size: 0.9rem;
+    padding: 0.5rem;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-wrapper table {
+    min-width: 900px;
+    font-size: 0.85rem;
+  }
+
+  .table-wrapper th,
+  .table-wrapper td {
+    padding: 0.6rem 0.75rem;
+    white-space: nowrap;
+  }
+
+  th {
+    font-size: 0.7rem;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .pagination button {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .kpi-card {
+    padding: 1.25rem;
+  }
+
+  .kpi-value {
+    font-size: 1.5rem;
+  }
+
+  .infraccion-form {
+    padding: 1.25rem;
+    gap: 1rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .infraccion-form label {
+    font-size: 0.9rem;
+  }
+
+  .infraccion-form input,
+  .infraccion-form textarea,
+  .infraccion-form select {
+    font-size: 0.9rem;
+    padding: 0.5rem;
+  }
+
+  .infraccion-form button {
+    width: 100%;
+    padding: 0.75rem 1rem;
+  }
+
+  .detail-panel {
+    padding: 1rem;
+  }
+
+  .detail-panel h3 {
+    font-size: 1rem;
+  }
+
+  .user-form .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .user-form button {
+    width: 100%;
+  }
+
+  .detail-table {
+    width: 100%;
+    font-size: 0.85rem;
+  }
+
+  .detail-table th,
+  .detail-table td {
+    padding: 0.5rem;
+  }
+}
+
+/* Extra small mobile: < 480px */
+@media screen and (max-width: 480px) {
+  .private-layout__header h1 {
+    font-size: 1rem;
+  }
+
+  .private-layout__nav a {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.5rem;
+  }
+
+  .section-header h2 {
+    font-size: 1.1rem;
+  }
+
+  .table-wrapper table {
+    min-width: 700px;
+    font-size: 0.8rem;
+  }
+
+  .kpi-card h3 {
+    font-size: 0.75rem;
+  }
+
+  .kpi-value {
+    font-size: 1.25rem;
+  }
+
+  .login-page label {
+    font-size: 0.9rem;
+  }
+
+  .login-page input {
+    font-size: 0.9rem;
+  }
 }
