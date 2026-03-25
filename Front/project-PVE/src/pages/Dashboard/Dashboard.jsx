@@ -51,7 +51,6 @@ function DashboardPage() {
   if (!canView) {
     return (
       <section>
-        <h2>Acceso restringido</h2>
         <p>Solo los roles administrador y director pueden visualizar el dashboard.</p>
       </section>
     );
@@ -59,10 +58,7 @@ function DashboardPage() {
 
   return (
     <section>
-      <header>
-        <h2>Dashboard de infracciones</h2>
-        <p>Bienvenido {user?.username}. Ajusta los filtros para analizar los datos.</p>
-      </header>
+      <p>Bienvenido {user?.username}. Ajusta los filtros para analizar los datos.</p>
 
       <form
         className="filter-bar"

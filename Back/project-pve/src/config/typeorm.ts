@@ -1,9 +1,6 @@
 import { registerAs } from '@nestjs/config';
 import { environment } from './environment';
 
-// Configuración centralizada para TypeORM
-const isProduction = process.env.NODE_ENV === 'production';
-
 const config = {
   type: 'postgres',
   database: environment.DB_NAME,
@@ -12,12 +9,11 @@ const config = {
   username: environment.DB_USERNAME,
   password: environment.DB_PASSWORD,
   autoLoadEntities: true,
-  synchronize: true, // solo en desarrollo !isProduction
-  logging: !isProduction,
-  dropSchema: false, // ¡nunca en true!
+  synchronize: false,
+  logging: process.env.NODE_ENV !== 'production',
+  dropSchema: false,
   migrations: ['dist/migrations/*.js'],
-  migrationsRun: isProduction, // ejecutar migraciones automáticamente en producción
+  migrationsRun: false,
 };
 
-// Exportamos con registerAs para que ConfigModule pueda cargarlo
 export const typeOrmConfig = registerAs('typeorm', () => config);

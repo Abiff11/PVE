@@ -8,12 +8,9 @@ interface LogPayload {
   description?: string;
   metadata?: Record<string, unknown>;
   userId?: number;
-  username?: string;
+  infraccionId?: string;
 }
 
-/**
- * Servicio centralizado para registrar y consultar eventos de la bitácora.
- */
 @Injectable()
 export class BitacoraService {
   constructor(
@@ -21,27 +18,26 @@ export class BitacoraService {
     private readonly bitacoraRepository: Repository<BitacoraEntry>,
   ) {}
 
-  /**
-   * Registra una nueva acción. Se invoca desde otros servicios cuando ocurre un movimiento.
-   */
   async log(action: string, payload: LogPayload = {}) {
     const entry = this.bitacoraRepository.create({
       action,
       description: payload.description,
       metadata: payload.metadata,
-      userId: payload.userId,
-      username: payload.username,
+      user: payload.userId ? ({ id: payload.userId } as BitacoraEntry['user']) : undefined,
+      infraccion: payload.infraccionId
+        ? ({ id: payload.infraccionId } as BitacoraEntry['infraccion'])
+        : undefined,
     });
     await this.bitacoraRepository.save(entry);
   }
 
-  /**
-   * Devuelve la bitácora paginada y opcionalmente filtrada por acción o usuario.
-   */
   async findAll(query: QueryBitacoraDto) {
     const { action, username, page = 1, pageSize = 20 } = query;
 
-    const qb = this.bitacoraRepository.createQueryBuilder('bitacora');
+    const qb = this.bitacoraRepository
+      .createQueryBuilder('bitacora')
+      .leftJoinAndSelect('bitacora.user', 'user')
+      .leftJoinAndSelect('bitacora.infraccion', 'infraccion');
 
     if (action) {
       qb.andWhere('LOWER(bitacora.action) LIKE :action', {
@@ -50,7 +46,7 @@ export class BitacoraService {
     }
 
     if (username) {
-      qb.andWhere('LOWER(bitacora.username) LIKE :username', {
+      qb.andWhere('LOWER(user.username) LIKE :username', {
         username: `%${username.toLowerCase()}%`,
       });
     }
@@ -62,7 +58,28 @@ export class BitacoraService {
     const [data, total] = await qb.getManyAndCount();
 
     return {
-      data,
+      data: data.map((entry) => ({
+        id: entry.id,
+        action: entry.action,
+        description: entry.description,
+        metadata: entry.metadata,
+        createdAt: entry.createdAt,
+        user: entry.user
+          ? {
+              id: entry.user.id,
+              username: entry.user.username,
+              nombre: entry.user.nombre,
+              apellido: entry.user.apellido,
+              role: entry.user.role,
+            }
+          : null,
+        infraccion: entry.infraccion
+          ? {
+              id: entry.infraccion.id,
+              folioInfraccion: entry.infraccion.folioInfraccion,
+            }
+          : null,
+      })),
       total,
       page,
       pageSize,

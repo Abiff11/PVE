@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
-import { useAuth } from '../../hooks/useAuth';
-import { usersService } from '../../services/users';
-import UserForm from '../../components/Users/UserForm';
+import { useEffect, useState } from "react";
+import { useAuth } from "../../hooks/useAuth";
+import { usersService } from "../../services/users";
+import UserForm from "../../components/Users/UserForm";
 
 const ROLE_LABELS = {
-  Admin: 'Admin',
-  Director: 'Director',
-  Capturista: 'Capturista',
-  Actualizador: 'Actualizador',
+  Admin: "Admin",
+  Director: "Director",
+  Capturista: "Capturista",
+  Actualizador: "Actualizador",
 };
 
 /**
@@ -32,7 +32,7 @@ function UsersDashboard() {
       const data = await usersService.list(token);
       setUsers(data);
     } catch (err) {
-      setError(err.message ?? 'No fue posible cargar los usuarios');
+      setError(err.message ?? "No fue posible cargar los usuarios");
     } finally {
       setLoading(false);
     }
@@ -51,10 +51,10 @@ function UsersDashboard() {
     setError(null);
     try {
       await usersService.create(payload, token);
-      setFeedback('Usuario creado correctamente');
+      setFeedback("Usuario creado correctamente");
       await loadUsers();
     } catch (err) {
-      setError(err.message ?? 'No fue posible crear al usuario');
+      setError(err.message ?? "No fue posible crear al usuario");
     } finally {
       setSubmitting(false);
     }
@@ -68,10 +68,10 @@ function UsersDashboard() {
     setError(null);
     try {
       await usersService.updateRole(id, role, token);
-      setFeedback('Rol actualizado correctamente');
+      setFeedback("Rol actualizado correctamente");
       await loadUsers();
     } catch (err) {
-      setError(err.message ?? 'No fue posible actualizar el rol');
+      setError(err.message ?? "No fue posible actualizar el rol");
     } finally {
       setRowActionId(null);
     }
@@ -83,10 +83,10 @@ function UsersDashboard() {
    */
   const handleDelete = async (id) => {
     if (user?.id === id) {
-      setError('No puedes eliminar tu propio usuario.');
+      setError("No puedes eliminar tu propio usuario.");
       return;
     }
-    const confirmed = window.confirm('¿Eliminar este usuario?');
+    const confirmed = window.confirm("¿Eliminar este usuario?");
     if (!confirmed) {
       return;
     }
@@ -95,10 +95,10 @@ function UsersDashboard() {
     setError(null);
     try {
       await usersService.remove(id, token);
-      setFeedback('Usuario eliminado correctamente');
+      setFeedback("Usuario eliminado correctamente");
       await loadUsers();
     } catch (err) {
-      setError(err.message ?? 'No fue posible eliminar al usuario');
+      setError(err.message ?? "No fue posible eliminar al usuario");
     } finally {
       setRowActionId(null);
     }
@@ -106,12 +106,7 @@ function UsersDashboard() {
 
   return (
     <section>
-      <header className="section-header">
-        <div>
-          <h2>Administración de usuarios</h2>
-          <p>Gestiona cuentas, roles y altas directamente desde este panel.</p>
-        </div>
-      </header>
+      <p>Gestiona cuentas, roles y altas directamente desde este panel.</p>
 
       {feedback ? <p className="success-text">{feedback}</p> : null}
       {error ? <p className="error-text">{error}</p> : null}
@@ -121,12 +116,12 @@ function UsersDashboard() {
         <UserForm onSubmit={handleCreateUser} submitting={submitting} />
       </article>
 
-      <article className="detail-panel" style={{ marginTop: '1.5rem' }}>
+      <article className="detail-panel" style={{ marginTop: "1.5rem" }}>
         <h3>Usuarios registrados</h3>
         {loading ? (
           <p>Cargando usuarios...</p>
         ) : (
-          <div className="table-wrapper">
+          <div className="table-wrapper table-wrapper--responsive">
             <table>
               <thead>
                 <tr>
@@ -147,19 +142,27 @@ function UsersDashboard() {
                 ) : (
                   users.map((item) => (
                     <tr key={item.id}>
-                      <td>{item.id}</td>
-                      <td>
-                        {item.nombre} {item.apellido}
+                      <td data-label="ID">
+                        <span className="cell-truncate">{item.id}</span>
                       </td>
-                      <td>{item.username}</td>
-                      <td>{item.telefono}</td>
-                      <td>{item.delegacion}</td>
-                      <td>
+                      <td data-label="Nombre">
+                        <span className="cell-truncate">
+                          {item.nombre} {item.apellido}
+                        </span>
+                      </td>
+                      <td data-label="Usuario">
+                        <span className="cell-truncate">{item.username}</span>
+                      </td>
+                      <td data-label="Telefono">
+                        <span className="cell-truncate">{item.telefono}</span>
+                      </td>
+                      <td data-label="Delegacion">
+                        <span className="cell-truncate">{item.delegacion}</span>
+                      </td>
+                      <td data-label="Rol">
                         <select
                           value={item.role}
-                          onChange={(event) =>
-                            handleRoleChange(item.id, event.target.value)
-                          }
+                          onChange={(event) => handleRoleChange(item.id, event.target.value)}
                           disabled={rowActionId === item.id}
                         >
                           {Object.entries(ROLE_LABELS).map(([value, label]) => (
@@ -169,12 +172,12 @@ function UsersDashboard() {
                           ))}
                         </select>
                       </td>
-                      <td>
+                      <td data-label="Accion" className="table-actions">
                         <button
                           type="button"
                           onClick={() => handleDelete(item.id)}
                           disabled={rowActionId === item.id}
-                          style={{ backgroundColor: '#dc2626' }}
+                          style={{ backgroundColor: "#dc2626" }}
                         >
                           Eliminar
                         </button>

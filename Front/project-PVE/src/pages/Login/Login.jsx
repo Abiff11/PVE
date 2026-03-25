@@ -13,21 +13,16 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  /**
-   * Controla los inputs del formulario actualizando el estado local.
-   */
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormState((prev) => ({ ...prev, [name]: value }));
   };
 
-  /**
-   * Envía las credenciales al backend y, si son válidas, guarda el token.
-   */
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
     setError(null);
+
     try {
       const response = await signin(formState);
       login(response.access_token);
@@ -42,38 +37,47 @@ function LoginPage() {
   return (
     <main className="login-page">
       <section className="login-card">
-        <h1>Acceso</h1>
-        <p>Introduce tus credenciales asignadas por el administrador.</p>
-        <form onSubmit={handleSubmit}>
-          <label>
+        <h2 className="login-card__title">ACCESO</h2>
+
+        <form className="login-form" onSubmit={handleSubmit}>
+          <label className="login-form__label" htmlFor="username">
             Usuario
-            <input
-              type="text"
-              name="username"
-              value={formState.username}
-              onChange={handleChange}
-              autoComplete="username"
-              required
-              disabled={loading}
-            />
           </label>
-          <label>
+          <input
+            id="username"
+            className="login-form__input"
+            type="text"
+            name="username"
+            placeholder="Usuario"
+            value={formState.username}
+            onChange={handleChange}
+            autoComplete="username"
+            required
+            disabled={loading}
+          />
+
+          <label className="login-form__label" htmlFor="password">
             Contraseña
-            <input
-              type="password"
-              name="password"
-              value={formState.password}
-              onChange={handleChange}
-              autoComplete="current-password"
-              required
-              disabled={loading}
-            />
           </label>
-          <button type="submit" disabled={loading}>
-            {loading ? 'Validando...' : 'Ingresar'}
+          <input
+            id="password"
+            className="login-form__input"
+            type="password"
+            name="password"
+            placeholder="Contraseña"
+            value={formState.password}
+            onChange={handleChange}
+            autoComplete="current-password"
+            required
+            disabled={loading}
+          />
+
+          {error ? <p className="error-text login-form__error">{error}</p> : null}
+
+          <button className="login-form__button" type="submit" disabled={loading}>
+            {loading ? 'Validando...' : 'Iniciar sesión'}
           </button>
         </form>
-        {error ? <p className="error-text">{error}</p> : null}
       </section>
     </main>
   );

@@ -36,7 +36,6 @@ export class AuthService {
     await this.bitacoraService.log('USER_LOGIN', {
       description: 'Inicio de sesión exitoso',
       userId: user.id,
-      username: user.username,
       metadata: { ip },
     });
 
@@ -53,7 +52,6 @@ export class AuthService {
       await this.bitacoraService.log('USER_LOGOUT', {
         description: 'Cierre de sesión',
         userId: actor.id,
-        username: actor.username,
         metadata: { ip },
       });
     }

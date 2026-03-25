@@ -1,14 +1,11 @@
-import { useEffect, useState } from 'react';
-import { useAuth } from '../../hooks/useAuth';
-import { fetchBitacora } from '../../services/bitacora';
-import PaginationControls from '../../components/Table/PaginationControls';
+import { useEffect, useState } from "react";
+import { useAuth } from "../../hooks/useAuth";
+import { fetchBitacora } from "../../services/bitacora";
+import PaginationControls from "../../components/Table/PaginationControls";
 
-/**
- * Vista de auditoría: muestra los eventos registrados en la bitácora solo para admin.
- */
 function BitacoraPage() {
   const { token } = useAuth();
-  const [filters, setFilters] = useState({ action: '', username: '' });
+  const [filters, setFilters] = useState({ action: "", username: "" });
   const [pageInfo, setPageInfo] = useState({
     data: [],
     total: 0,
@@ -18,9 +15,6 @@ function BitacoraPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  /**
-   * Consulta la bitácora en el backend aplicando filtros y paginación.
-   */
   const loadData = async (page = pageInfo.page) => {
     setLoading(true);
     setError(null);
@@ -40,7 +34,7 @@ function BitacoraPage() {
         pageSize: response.pageSize,
       });
     } catch (err) {
-      setError(err.message ?? 'No fue posible cargar la bitácora');
+      setError(err.message ?? "No fue posible cargar la bitácora");
     } finally {
       setLoading(false);
     }
@@ -51,9 +45,6 @@ function BitacoraPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  /**
-   * Sincroniza los filtros locales con los inputs controlados.
-   */
   const handleFilterChange = (event) => {
     const { name, value } = event.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
@@ -61,12 +52,7 @@ function BitacoraPage() {
 
   return (
     <section>
-      <header className="section-header">
-        <div>
-          <h2>Bitácora del sistema</h2>
-          <p>Consulta los movimientos realizados por los usuarios.</p>
-        </div>
-      </header>
+      <p>Consulta los movimientos realizados por los usuarios.</p>
 
       <form
         className="filter-bar"
@@ -96,13 +82,13 @@ function BitacoraPage() {
           />
         </label>
         <button type="submit" disabled={loading}>
-          {loading ? 'Buscando...' : 'Filtrar'}
+          {loading ? "Buscando..." : "Filtrar"}
         </button>
       </form>
 
       {error ? <p className="error-text">{error}</p> : null}
 
-      <div className="table-wrapper">
+      <div className="table-wrapper table-wrapper--responsive">
         <table>
           <thead>
             <tr>
@@ -110,20 +96,32 @@ function BitacoraPage() {
               <th>Acción</th>
               <th>Usuario</th>
               <th>Descripción</th>
+              <th>Folio</th>
             </tr>
           </thead>
           <tbody>
             {pageInfo.data.length === 0 ? (
               <tr>
-                <td colSpan={4}>No hay registros que coincidan.</td>
+                <td colSpan={5}>No hay registros que coincidan.</td>
               </tr>
             ) : (
               pageInfo.data.map((entry) => (
                 <tr key={entry.id}>
-                  <td>{new Date(entry.createdAt).toLocaleString()}</td>
-                  <td>{entry.action}</td>
-                  <td>{entry.username ?? 'N/D'}</td>
-                  <td>{entry.description}</td>
+                  <td data-label="Fecha">
+                    <span className="cell-truncate">{new Date(entry.createdAt).toLocaleString()}</span>
+                  </td>
+                  <td data-label="Accion">
+                    <span className="cell-truncate">{entry.action}</span>
+                  </td>
+                  <td data-label="Usuario">
+                    <span className="cell-truncate">{entry.user?.username ?? "N/D"}</span>
+                  </td>
+                  <td data-label="Descripcion">
+                    <span className="cell-truncate">{entry.description ?? "-"}</span>
+                  </td>
+                  <td data-label="Folio">
+                    <span className="cell-truncate">{entry.infraccion?.folioInfraccion ?? "-"}</span>
+                  </td>
                 </tr>
               ))
             )}

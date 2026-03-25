@@ -72,12 +72,7 @@ function NuevaInfraccionPage() {
 
   return (
     <section>
-      <header className="section-header">
-        <div>
-          <h2>Registrar nueva infracción</h2>
-          <p>Completa los campos obligatorios para dar de alta un nuevo folio.</p>
-        </div>
-      </header>
+      <p>Completa los campos obligatorios para dar de alta un nuevo folio.</p>
 
       {error ? <p className="error-text">{error}</p> : null}
       <InfraccionForm

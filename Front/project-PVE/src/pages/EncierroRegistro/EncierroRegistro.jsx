@@ -133,18 +133,7 @@ function EncierroRegistroPage() {
 
   return (
     <section>
-      <header className="section-header">
-        <div>
-          <h2>Registro de encierro</h2>
-          <p>Consulta un folio de infracción y captura los datos del encierro.</p>
-        </div>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <Link to="/encierros">Ir a listado</Link>
-          <button type="button" onClick={() => navigate(-1)}>
-            Volver
-          </button>
-        </div>
-      </header>
+      <p>Consulta un folio de infracción y captura los datos del encierro.</p>
 
       {error ? <p className="error-text">{error}</p> : null}
       {successMessage ? <p className="success-text">{successMessage}</p> : null}

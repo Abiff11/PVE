@@ -14,8 +14,8 @@ import {
 } from '@nestjs/common';
 import { InfraccionesService } from './infracciones.service';
 import { CreateInfraccionDto } from './dto/CreateInfraccion.dto';
+import { InfraccionResponseDto } from './dto/InfraccionResponse.dto';
 import { UpdateInfraccionDto } from './dto/UpdateInfraccion.dto';
-import { Infraccion } from './entities/Infraccion.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/decorators/roles.decorators';
 import { RolesGuard } from '../auth/roles/roles.guard';
@@ -41,7 +41,7 @@ export class InfraccionesController {
   async create(
     @Body() createInfraccionDto: CreateInfraccionDto,
     @Req() req: Request,
-  ): Promise<Infraccion> {
+  ): Promise<InfraccionResponseDto> {
     const user = req.user as RequestUser;
     if (!user?.id) {
       throw new UnauthorizedException('Usuario no autenticado');
@@ -75,7 +75,9 @@ export class InfraccionesController {
     UserRole.DIRECTOR,
     UserRole.ENCIERRO,
   )
-  async findByFolio(@Param('folio') folio: string): Promise<Infraccion> {
+  async findByFolio(
+    @Param('folio') folio: string,
+  ): Promise<InfraccionResponseDto> {
     return await this.infraccionesService.findByFolio(folio);
   }
 

@@ -1,18 +1,21 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { infraccionesService } from "../../services/infracciones";
-import { useAuth } from "../../hooks/useAuth";
+import { Link } from "react-router-dom";
 import PaginationControls from "../../components/Table/PaginationControls";
+import { useAuth } from "../../hooks/useAuth";
+import { infraccionesService } from "../../services/infracciones";
 
 function formatErrorMessage(error) {
-  const rawMessage = error?.details?.message ?? error?.message ?? "Ocurrió un error inesperado";
+  const rawMessage = error?.details?.message ?? error?.message ?? "Ocurrio un error inesperado";
   const messages = Array.isArray(rawMessage) ? rawMessage : [rawMessage];
-  return messages.filter(Boolean).join(" • ") || "Ocurrió un error inesperado";
+  return messages.filter(Boolean).join(" • ") || "Ocurrio un error inesperado";
+}
+
+function getMotivoLabel(item) {
+  return item.situacionVehiculo === "VEHICULO_DETENIDO" ? "Vehiculo detenido" : "Solo infraccion";
 }
 
 function InfraccionesListPage() {
-  const navigate = useNavigate();
-  const { token, role } = useAuth();
+  const { token } = useAuth();
   const [filters, setFilters] = useState({
     folio: "",
     municipio: "",
@@ -66,12 +69,7 @@ function InfraccionesListPage() {
 
   return (
     <section>
-      <header className="section-header">
-        <div>
-          <h2>Listado de infracciones</h2>
-          <p>Consulta, filtra y navega entre los folios registrados.</p>
-        </div>
-      </header>
+      <p>Consulta, filtra y navega entre los folios registrados.</p>
 
       <form
         className="filter-bar"
@@ -100,7 +98,7 @@ function InfraccionesListPage() {
           Fecha hasta
           <input type="date" name="fechaFin" value={filters.fechaFin} onChange={handleFilterChange} />
         </label>
-        <button type="submit" disabled={loading}>
+        <button type="submit" disabled={loading} className="btn btn--primary">
           {loading ? "Buscando..." : "Aplicar filtros"}
         </button>
       </form>
@@ -109,45 +107,47 @@ function InfraccionesListPage() {
       {loading ? (
         <p>Cargando registros...</p>
       ) : (
-        <div className="table-wrapper">
+        <div className="table-wrapper table-wrapper--responsive">
           <table>
             <thead>
               <tr>
                 <th>Folio</th>
                 <th>Fecha</th>
-                <th>Hora</th>
-                <th>Encierro</th>
-                <th>Infractor</th>
-                <th>Placas</th>
-                <th>Servicio</th>
-                <th>Municipio</th>
-                <th>Agencia</th>
-                <th>Clave oficial</th>
-                <th>Situación</th>
+                <th>Oficial</th>
+                <th>Motivo</th>
+                <th>Estatus</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {pageState.data.length === 0 ? (
                 <tr>
-                  <td colSpan={12}>No se encontraron registros con los filtros actuales.</td>
+                  <td colSpan={6}>No se encontraron registros con los filtros actuales.</td>
                 </tr>
               ) : (
                 pageState.data.map((item) => (
                   <tr key={item.id}>
-                    <td>{item.folioInfraccion}</td>
-                    <td>{item.fecha}</td>
-                    <td>{item.hora?.slice?.(0, 5) ?? item.hora}</td>
-                    <td>{item.situacionVehiculo === "SOLO_INFRACCION" ? "No aplica" : item.encierro}</td>
-                    <td>{item.nombreInfractor}</td>
-                    <td>{item.placas}</td>
-                    <td>{item.servicio}</td>
-                    <td>{item.municipio}</td>
-                    <td>{item.agencia}</td>
-                    <td>{item.claveOficial}</td>
-                    <td>{item.situacionVehiculo === "VEHICULO_DETENIDO" ? "Vehículo detenido" : "Solo infracción"}</td>
-                    <td>
-                      <Link to={`/infracciones/${item.folioInfraccion}`}>Ver detalle</Link>
+                    <td data-label="Folio">
+                      <span className="cell-truncate">{item.folioInfraccion}</span>
+                    </td>
+                    <td data-label="Fecha">
+                      <span className="cell-truncate">{item.fecha}</span>
+                    </td>
+                    <td data-label="Oficial">
+                      <span className="cell-truncate">{item.claveOficial || "-"}</span>
+                    </td>
+                    <td data-label="Motivo">
+                      <span className="cell-truncate">{getMotivoLabel(item)}</span>
+                    </td>
+                    <td data-label="Estatus">
+                      <span className={`status status--${item.estatus?.toLowerCase()}`}>
+                        {item.estatus === "PAGADA" ? "Pagada" : "Pendiente"}
+                      </span>
+                    </td>
+                    <td data-label="Accion" className="table-actions">
+                      <Link to={`/infracciones/${item.folioInfraccion}`} className="action-link">
+                        Ver detalle
+                      </Link>
                     </td>
                   </tr>
                 ))

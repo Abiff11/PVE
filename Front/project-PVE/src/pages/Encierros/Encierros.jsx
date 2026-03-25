@@ -1,9 +1,24 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
 import PaginationControls from "../../components/Table/PaginationControls";
-import { encierrosService } from "../../services/encierros";
+import { useAuth } from "../../hooks/useAuth";
 import { ENCIERRO_OPTIONS } from "../../catalogos";
+import { encierrosService } from "../../services/encierros";
+
+function getVehicleLabel(item) {
+  const vehiculo = item.infraccion?.vehiculo;
+  if (!vehiculo) {
+    return item.encierro || "-";
+  }
+
+  return [vehiculo.marca, vehiculo.modelo, vehiculo.placas].filter(Boolean).join(" • ");
+}
+
+function getMotivoLabel(item) {
+  return item.infraccion?.situacionVehiculo === "VEHICULO_DETENIDO"
+    ? "Vehiculo detenido"
+    : item.servicioGrua || item.encierro || "-";
+}
 
 function EncierrosPage() {
   const { token } = useAuth();
@@ -59,12 +74,7 @@ function EncierrosPage() {
 
   return (
     <section>
-      <header className="section-header">
-        <div>
-          <h2>Encierros</h2>
-          <p>Consulta por encierro, folio y rango de fechas.</p>
-        </div>
-      </header>
+      <p>Consulta por encierro, folio y rango de fechas.</p>
 
       <article className="detail-panel">
         <h3>Filtros</h3>
@@ -76,7 +86,7 @@ function EncierrosPage() {
           }}
         >
           <label>
-            Folio infracción
+            Folio infraccion
             <input
               type="text"
               name="folio"
@@ -105,7 +115,7 @@ function EncierrosPage() {
             Fecha hasta
             <input type="date" name="fechaFin" value={filters.fechaFin} onChange={handleFilterChange} />
           </label>
-          <button type="submit" disabled={loading}>
+          <button type="submit" disabled={loading} className="btn btn--primary">
             {loading ? "Buscando..." : "Aplicar filtros"}
           </button>
         </form>
@@ -116,39 +126,51 @@ function EncierrosPage() {
       {loading ? (
         <p>Cargando registros...</p>
       ) : (
-        <div className="table-wrapper">
+        <div className="table-wrapper table-wrapper--responsive">
           <table>
             <thead>
               <tr>
-                <th>Folio</th>
-                <th>Fecha ingreso</th>
-                <th>Encierro</th>
-                <th>Grua</th>
-                <th>Recibe</th>
-                <th>Entrega</th>
-                <th>Status</th>
-                <th>Acciones</th>
+                <th style={{ width: "10%" }}>Folio</th>
+                <th style={{ width: "13%" }}>Fecha de ingreso</th>
+                <th style={{ width: "25%" }}>Vehiculo</th>
+                <th style={{ width: "25%" }}>Motivo</th>
+                <th style={{ width: "15%" }}>Estatus</th>
+                <th style={{ width: "20%" }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {pageState.data.length === 0 ? (
                 <tr>
-                  <td colSpan={8}>No se encontraron encierros con los filtros actuales.</td>
+                  <td colSpan={6}>No se encontraron encierros con los filtros actuales.</td>
                 </tr>
               ) : (
                 pageState.data.map((item) => {
                   const hasEgreso = Boolean(item.fechaLiberacion || item.fechaSalida || item.nombreQuienEntrega);
                   return (
                     <tr key={item.id}>
-                      <td>{item.folioInfraccion}</td>
-                      <td>{item.fechaIngreso}</td>
-                      <td>{item.encierro}</td>
-                      <td>{item.servicioGrua ?? "-"}</td>
-                      <td>{item.nombreQuienRecibe}</td>
-                      <td>{item.nombreQuienEntrega ?? "-"}</td>
-                      <td>{hasEgreso ? "Entregado" : "En resguardo"}</td>
-                      <td>
-                        <Link to={`/encierros/${item.folioInfraccion}`}>Ver detalle</Link>
+                      <td data-label="Folio">
+                        <span className="cell-truncate">{item.folioInfraccion}</span>
+                      </td>
+                      <td data-label="Fecha de ingreso">
+                        <span className="cell-truncate">{item.fechaIngreso}</span>
+                      </td>
+                      <td data-label="Vehiculo">
+                        <span className="cell-truncate" style={{ whiteSpace: "normal" }}>
+                          {getVehicleLabel(item)}
+                        </span>
+                      </td>
+                      <td data-label="Motivo">
+                        <span className="cell-truncate">{getMotivoLabel(item)}</span>
+                      </td>
+                      <td data-label="Estatus">
+                        <span className={`status ${hasEgreso ? "status--pagada" : "status--pendiente"}`}>
+                          {hasEgreso ? "Entregado" : "En resguardo"}
+                        </span>
+                      </td>
+                      <td data-label="Accion" className="table-actions">
+                        <Link to={`/encierros/${item.folioInfraccion}`} className="action-link">
+                          Ver detalle
+                        </Link>
                       </td>
                     </tr>
                   );

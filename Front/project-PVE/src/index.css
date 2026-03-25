@@ -1,49 +1,176 @@
 :root {
-  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: "Roboto", "Segoe UI", sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #0f172a;
-  background-color: #f4f6f8;
+  color: #121212;
+  background-color: #f5f7fa;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --app-bg: #f5f7fa;
+  --card-bg: #fafafa;
+  --sidebar-bg: #1c2e4a;
+  --sidebar-hover: #243b5e;
+  --header-bg: #ffffff;
+  --text-main: #121212;
+  --text-light: #ffffff;
+  --border-color: #e5e7eb;
+  --input-border: #d1d5db;
+  --input-focus: #1c2e4a;
+  --button-primary: #1c2e4a;
+  --button-hover: #243b5e;
+  --button-danger: #dc2626;
+  --button-danger-hover: #b91c1c;
+  --button-success: #16a34a;
+  --button-success-hover: #15803d;
+  --shadow-soft: 0 10px 30px rgba(28, 46, 74, 0.12);
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+  max-width: 100%;
+}
+
+html,
+body,
+#root {
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 body {
   margin: 0;
-  min-height: 100vh;
-  background-color: aliceblue;
-  color: #0f172a;
+  background-color: var(--app-bg);
+  color: var(--text-main);
+  font-size: 16px;
 }
 
 a {
-  color: #2563eb;
+  color: inherit;
   text-decoration: none;
 }
-a:hover {
-  text-decoration: underline;
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
 }
 
-button {
-  border-radius: 6px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.1em;
-  font-size: 1rem;
+/* ============================================
+ * ESTILOS DE BOTONES NORMALIZADOS
+ * ============================================ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
   font-weight: 600;
-  font-family: inherit;
-  background-color: #2563eb;
-  color: #fff;
   cursor: pointer;
-  transition: background-color 0.2s, box-shadow 0.2s;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  white-space: nowrap;
 }
-button:hover {
-  background-color: #1d4ed8;
-}
-button:disabled {
+
+.btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Botón primario */
+.btn--primary {
+  background-color: var(--button-primary);
+  color: var(--text-light);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background-color: var(--button-hover);
+}
+
+/* Botón secundario */
+.btn--secondary {
+  background-color: var(--card-bg);
+  color: var(--text-main);
+  border: 1px solid var(--input-border);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  background-color: var(--app-bg);
+  border-color: var(--button-primary);
+}
+
+/* Botón de peligro */
+.btn--danger {
+  background-color: #dc2626;
+  color: var(--text-light);
+}
+
+.btn--danger:hover:not(:disabled) {
+  background-color: #b91c1c;
+}
+
+/* Botón éxito */
+.btn--success {
+  background-color: #16a34a;
+  color: var(--text-light);
+}
+
+.btn--success:hover:not(:disabled) {
+  background-color: #15803d;
+}
+
+/* Botón pequeño */
+.btn--sm {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+/* Botón grande */
+.btn--lg {
+  padding: 0.85rem 2rem;
+  font-size: 1rem;
+}
+
+/* Botón de icono */
+.btn--icon {
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+
+/* Full width */
+.btn--full {
+  width: 100%;
+}
+
+/* ============================================
+ * ESTILOS DE ENLACES COMO BOTONES
+ * ============================================ */
+
+.btn-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--button-primary);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-link:hover {
+  background-color: var(--app-bg);
+  text-decoration: none;
 }

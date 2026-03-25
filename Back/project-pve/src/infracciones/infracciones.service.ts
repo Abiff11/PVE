@@ -1,24 +1,42 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UsersService } from '../users/users.service';
 import { BitacoraService } from '../bitacora/bitacora.service';
+import { DEFAULT_ENCIERRO, DEFAULT_SERVICIO_GRUA } from '../catalogos';
 import { Encierro } from '../encierro/entities/encierro.entity';
-import { CreateInfraccionDto } from './dto/CreateInfraccion.dto';
-import { UpdateInfraccionDto } from './dto/UpdateInfraccion.dto';
-import { QueryInfraccionDto } from './dto/QueryInfraccion.dto';
-import { KpiInfraccionDto } from './dto/KpiInfraccion.dto';
+import { UsersService } from '../users/users.service';
 import {
-  Infraccion,
+  CreateInfraccionDetalleDto,
+  CreateInfraccionDto,
+  CreateInfractorDto,
+  CreateUbicacionInfraccionDto,
+  CreateVehiculoDto,
+} from './dto/CreateInfraccion.dto';
+import { InfraccionResponseDto } from './dto/InfraccionResponse.dto';
+import { KpiInfraccionDto } from './dto/KpiInfraccion.dto';
+import { QueryInfraccionDto } from './dto/QueryInfraccion.dto';
+import { UpdateInfraccionDto } from './dto/UpdateInfraccion.dto';
+import { mapInfraccionToResponse } from './mappers/infraccion.mapper';
+import { CatalogoInfraccion } from './entities/CatalogoInfraccion.entity';
+import { InfraccionDetalle } from './entities/InfraccionDetalle.entity';
+import { Infractor } from './entities/Infractor.entity';
+import {
   EstatusInfraccion,
+  Infraccion,
   SituacionVehiculoInfraccion,
 } from './entities/Infraccion.entity';
-import { DEFAULT_ENCIERRO, DEFAULT_SERVICIO_GRUA } from '../catalogos';
+import { UbicacionInfraccion } from './entities/UbicacionInfraccion.entity';
+import { Vehiculo } from './entities/Vehiculo.entity';
 
-/**
- * Contiene la lógica de negocio para crear, filtrar y mantener infracciones.
- * Se apoya de TypeORM y de UsersService para relacionar cada registro con su creador.
- */
+type Actor = { id?: number; username?: string };
+
+type NormalizedInfraccionPayload = {
+  infractor: CreateInfractorDto;
+  vehiculo: CreateVehiculoDto;
+  ubicacion: CreateUbicacionInfraccionDto;
+  detalles: CreateInfraccionDetalleDto[];
+};
+
 @Injectable()
 export class InfraccionesService {
   constructor(
@@ -26,6 +44,14 @@ export class InfraccionesService {
     private readonly infraccionRepository: Repository<Infraccion>,
     @InjectRepository(Encierro)
     private readonly encierroRepository: Repository<Encierro>,
+    @InjectRepository(Infractor)
+    private readonly infractorRepository: Repository<Infractor>,
+    @InjectRepository(Vehiculo)
+    private readonly vehiculoRepository: Repository<Vehiculo>,
+    @InjectRepository(UbicacionInfraccion)
+    private readonly ubicacionRepository: Repository<UbicacionInfraccion>,
+    @InjectRepository(CatalogoInfraccion)
+    private readonly catalogoRepository: Repository<CatalogoInfraccion>,
     private readonly usersService: UsersService,
     private readonly bitacoraService: BitacoraService,
   ) {}
@@ -40,6 +66,221 @@ export class InfraccionesService {
     return date;
   }
 
+  private normalizePayload(
+    payload: Pick<
+      CreateInfraccionDto,
+      | 'infractor'
+      | 'vehiculo'
+      | 'ubicacion'
+      | 'detalles'
+      | 'nombreInfractor'
+      | 'genero'
+      | 'numeroLicencia'
+      | 'servicio'
+      | 'clase'
+      | 'tipo'
+      | 'marca'
+      | 'modelo'
+      | 'color'
+      | 'placas'
+      | 'estadoPlacas'
+      | 'serie'
+      | 'motor'
+      | 'municipio'
+      | 'agencia'
+      | 'colonia'
+      | 'calle'
+      | 'm1'
+      | 'm2'
+      | 'm3'
+      | 'm4'
+      | 'claveOficial'
+      | 'numeroParteInformativo'
+      | 'nombreOperativo'
+      | 'sitioServicioPublico'
+    >,
+  ): NormalizedInfraccionPayload {
+    const infractor = payload.infractor ?? {
+      nombre: payload.nombreInfractor,
+      genero: payload.genero,
+      numeroLicencia: payload.numeroLicencia,
+    };
+
+    const vehiculo = payload.vehiculo ?? {
+      servicio: payload.servicio,
+      clase: payload.clase,
+      tipo: payload.tipo,
+      marca: payload.marca,
+      modelo: payload.modelo,
+      color: payload.color,
+      placas: payload.placas,
+      estadoPlacas: payload.estadoPlacas,
+      serie: payload.serie,
+      motor: payload.motor,
+    };
+
+    const ubicacion = payload.ubicacion ?? {
+      municipio: payload.municipio,
+      agencia: payload.agencia,
+      colonia: payload.colonia,
+      calle: payload.calle,
+      m1: payload.m1,
+      m2: payload.m2,
+      m3: payload.m3,
+      m4: payload.m4,
+    };
+
+    const detalles =
+      payload.detalles && payload.detalles.length > 0
+        ? payload.detalles
+        : [
+            {
+              claveOficial: payload.claveOficial,
+              numeroParteInformativo: payload.numeroParteInformativo,
+              nombreOperativo: payload.nombreOperativo,
+              sitioServicioPublico: payload.sitioServicioPublico,
+            },
+          ];
+
+    if (
+      !infractor.nombre ||
+      !infractor.genero ||
+      !infractor.numeroLicencia ||
+      !vehiculo.servicio ||
+      !vehiculo.clase ||
+      !vehiculo.tipo ||
+      !vehiculo.marca ||
+      !vehiculo.modelo ||
+      !vehiculo.color ||
+      !vehiculo.placas ||
+      !vehiculo.estadoPlacas ||
+      !vehiculo.serie ||
+      !vehiculo.motor ||
+      !ubicacion.municipio ||
+      !ubicacion.agencia ||
+      !ubicacion.colonia ||
+      !ubicacion.calle ||
+      !detalles.length ||
+      detalles.some((detalle) => !detalle.claveOficial || !detalle.nombreOperativo)
+    ) {
+      throw new BadRequestException(
+        'La infracción debe incluir infractor, vehículo, ubicación y al menos un detalle válido',
+      );
+    }
+
+    return {
+      infractor: infractor as CreateInfractorDto,
+      vehiculo: vehiculo as CreateVehiculoDto,
+      ubicacion: ubicacion as CreateUbicacionInfraccionDto,
+      detalles: detalles as CreateInfraccionDetalleDto[],
+    };
+  }
+
+  private async resolveInfractor(data: CreateInfractorDto): Promise<Infractor> {
+    const existente = await this.infractorRepository.findOne({
+      where: {
+        nombre: data.nombre,
+        genero: data.genero,
+        numeroLicencia: data.numeroLicencia,
+      },
+    });
+
+    if (existente) {
+      return existente;
+    }
+
+    return this.infractorRepository.save(this.infractorRepository.create(data));
+  }
+
+  private async resolveVehiculo(data: CreateVehiculoDto): Promise<Vehiculo> {
+    const existente = await this.vehiculoRepository.findOne({
+      where: {
+        placas: data.placas,
+        serie: data.serie,
+        motor: data.motor,
+      },
+    });
+
+    if (existente) {
+      return this.vehiculoRepository.save({ ...existente, ...data });
+    }
+
+    return this.vehiculoRepository.save(this.vehiculoRepository.create(data));
+  }
+
+  private async resolveUbicacion(
+    data: CreateUbicacionInfraccionDto,
+  ): Promise<UbicacionInfraccion> {
+    const existente = await this.ubicacionRepository.findOne({
+      where: {
+        municipio: data.municipio,
+        agencia: data.agencia,
+        colonia: data.colonia,
+        calle: data.calle,
+        m1: data.m1,
+        m2: data.m2,
+        m3: data.m3,
+        m4: data.m4,
+      },
+    });
+
+    if (existente) {
+      return existente;
+    }
+
+    return this.ubicacionRepository.save(this.ubicacionRepository.create(data));
+  }
+
+  private async resolveCatalogo(claveOficial: string): Promise<CatalogoInfraccion> {
+    const existente = await this.catalogoRepository.findOne({
+      where: { claveOficial },
+    });
+
+    if (existente) {
+      return existente;
+    }
+
+    return this.catalogoRepository.save(
+      this.catalogoRepository.create({ claveOficial }),
+    );
+  }
+
+  private async buildDetalles(
+    detalles: CreateInfraccionDetalleDto[],
+  ): Promise<InfraccionDetalle[]> {
+    return Promise.all(
+      detalles.map(async (detalle) => {
+        const catalogoInfraccion = await this.resolveCatalogo(detalle.claveOficial);
+        return this.infraccionRepository.manager.create(InfraccionDetalle, {
+          catalogoInfraccion,
+          numeroParteInformativo: detalle.numeroParteInformativo,
+          nombreOperativo: detalle.nombreOperativo,
+          sitioServicioPublico: detalle.sitioServicioPublico,
+        });
+      }),
+    );
+  }
+
+  private async loadInfraccionOrFail(folio: string): Promise<Infraccion> {
+    const infraccion = await this.infraccionRepository.findOne({
+      where: { folioInfraccion: folio },
+      relations: {
+        infractor: true,
+        vehiculo: true,
+        ubicacion: true,
+        detalles: { catalogoInfraccion: true },
+        encierroRegistro: true,
+        createdBy: true,
+      },
+    });
+
+    if (!infraccion) {
+      throw new BadRequestException(`No existe infracción con folio ${folio}`);
+    }
+
+    return infraccion;
+  }
+
   private async syncEncierroRecord(infraccion: Infraccion): Promise<void> {
     const isDetenido =
       infraccion.situacionVehiculo ===
@@ -47,19 +288,24 @@ export class InfraccionesService {
       infraccion.encierro &&
       infraccion.encierro !== 'No aplica';
 
-    if (!isDetenido) {
-      return;
-    }
-
     const existente = await this.encierroRepository.findOne({
       where: { folioInfraccion: infraccion.folioInfraccion },
     });
+
+    if (!isDetenido) {
+      if (existente) {
+        await this.encierroRepository.remove(existente);
+      }
+      return;
+    }
+
+    const primerDetalle = infraccion.detalles?.[0];
 
     const payload: Partial<Encierro> = {
       folioInfraccion: infraccion.folioInfraccion,
       fechaIngreso: infraccion.fecha,
       encierro: infraccion.encierro,
-      nombreQuienRecibe: infraccion.nombreOperativo ?? 'SIN DATO',
+      nombreQuienRecibe: primerDetalle?.nombreOperativo ?? 'SIN DATO',
       servicioGrua: infraccion.servicioGrua,
       fechaLiberacion: null as unknown as string,
       fechaSalida: null as unknown as string,
@@ -72,20 +318,13 @@ export class InfraccionesService {
       return;
     }
 
-    const nuevo = this.encierroRepository.create(payload);
-    await this.encierroRepository.save(nuevo);
+    await this.encierroRepository.save(this.encierroRepository.create(payload));
   }
-
-  /* =====================================================
-     CREATE
-     ===================================================== */
 
   async create(
     createDto: CreateInfraccionDto,
     userId: number,
-  ): Promise<Infraccion> {
-    const { fecha, hora, ...rest } = createDto;
-
+  ): Promise<InfraccionResponseDto> {
     const existe = await this.infraccionRepository.findOne({
       where: { folioInfraccion: createDto.folioInfraccion },
     });
@@ -94,53 +333,67 @@ export class InfraccionesService {
       throw new BadRequestException('El folio ya existe');
     }
 
-    const fechaHora = this.parseFechaHora(fecha, hora);
-
+    const fechaHora = this.parseFechaHora(createDto.fecha, createDto.hora);
     const creador = await this.usersService.findById(userId);
+
     if (!creador) {
       throw new BadRequestException('Usuario no encontrado');
     }
 
+    const normalized = this.normalizePayload(createDto);
+    const infractor = await this.resolveInfractor(normalized.infractor);
+    const vehiculo = await this.resolveVehiculo(normalized.vehiculo);
+    const ubicacion = await this.resolveUbicacion(normalized.ubicacion);
+    const detalles = await this.buildDetalles(normalized.detalles);
+
     const isSoloInfraccion =
-      rest.situacionVehiculo === SituacionVehiculoInfraccion.SOLO_INFRACCION;
+      createDto.situacionVehiculo ===
+      SituacionVehiculoInfraccion.SOLO_INFRACCION;
 
     const nueva = this.infraccionRepository.create({
-      ...rest,
+      folioInfraccion: createDto.folioInfraccion,
+      fecha: createDto.fecha,
+      hora: createDto.hora,
+      fechaHora,
+      situacionVehiculo: createDto.situacionVehiculo,
       encierro: isSoloInfraccion
         ? 'No aplica'
-        : (rest.encierro ?? DEFAULT_ENCIERRO),
+        : (createDto.encierro ?? DEFAULT_ENCIERRO),
       servicioGrua: isSoloInfraccion
         ? 'No aplica'
-        : (rest.servicioGrua ?? DEFAULT_SERVICIO_GRUA),
-      fecha,
-      hora,
-      fechaHora,
+        : (createDto.servicioGrua ?? DEFAULT_SERVICIO_GRUA),
+      monto: 0,
       estatus: EstatusInfraccion.PENDIENTE,
+      claveOficial: detalles[0]?.catalogoInfraccion?.claveOficial,
+      numeroParteInformativo: detalles[0]?.numeroParteInformativo,
+      nombreOperativo: detalles[0]?.nombreOperativo,
+      sitioServicioPublico: detalles[0]?.sitioServicioPublico,
+      infractor,
+      vehiculo,
+      ubicacion,
+      detalles,
       createdBy: creador,
     });
 
     const guardada = await this.infraccionRepository.save(nueva);
+    const hydrated = await this.loadInfraccionOrFail(guardada.folioInfraccion);
 
     this.logger.log(`Infracción creada folio=${guardada.folioInfraccion}`);
 
     await this.bitacoraService.log('INFRACCION_CREADA', {
       description: `Se registró la infracción ${guardada.folioInfraccion}`,
       userId: creador.id,
-      username: creador.username,
-      metadata: { infraccionId: guardada.id },
+      infraccionId: guardada.id,
+      metadata: { folioInfraccion: guardada.folioInfraccion },
     });
 
-    await this.syncEncierroRecord(guardada);
+    await this.syncEncierroRecord(hydrated);
 
-    return guardada;
+    return mapInfraccionToResponse(hydrated);
   }
 
-  /* =====================================================
-     FIND ALL
-     ===================================================== */
-
   async findAll(query?: QueryInfraccionDto): Promise<{
-    data: Infraccion[];
+    data: InfraccionResponseDto[];
     total: number;
     page: number;
     pageSize: number;
@@ -158,7 +411,15 @@ export class InfraccionesService {
     const pageNumber = page > 0 ? page : 1;
     const take = pageSize > 0 ? pageSize : 10;
 
-    const qb = this.infraccionRepository.createQueryBuilder('infraccion');
+    const qb = this.infraccionRepository
+      .createQueryBuilder('infraccion')
+      .leftJoinAndSelect('infraccion.infractor', 'infractor')
+      .leftJoinAndSelect('infraccion.vehiculo', 'vehiculo')
+      .leftJoinAndSelect('infraccion.ubicacion', 'ubicacion')
+      .leftJoinAndSelect('infraccion.detalles', 'detalle')
+      .leftJoinAndSelect('detalle.catalogoInfraccion', 'catalogo')
+      .leftJoinAndSelect('infraccion.createdBy', 'createdBy')
+      .leftJoinAndSelect('infraccion.encierroRegistro', 'encierroRegistro');
 
     if (folio) {
       qb.andWhere('LOWER(infraccion.folioInfraccion) LIKE :folio', {
@@ -167,13 +428,13 @@ export class InfraccionesService {
     }
 
     if (municipio) {
-      qb.andWhere('LOWER(infraccion.municipio) LIKE :municipio', {
+      qb.andWhere('LOWER(ubicacion.municipio) LIKE :municipio', {
         municipio: `%${municipio.toLowerCase()}%`,
       });
     }
 
     if (claveOficial) {
-      qb.andWhere('LOWER(infraccion.claveOficial) LIKE :claveOficial', {
+      qb.andWhere('LOWER(catalogo.claveOficial) LIKE :claveOficial', {
         claveOficial: `%${claveOficial.toLowerCase()}%`,
       });
     }
@@ -213,24 +474,22 @@ export class InfraccionesService {
     const [data, total] = await qb.getManyAndCount();
 
     return {
-      data,
+      data: data.map(mapInfraccionToResponse),
       total,
       page: pageNumber,
       pageSize: take,
     };
   }
 
-  /* =====================================================
-     KPIs
-     ===================================================== */
-
   async getKpis(filters: KpiInfraccionDto) {
     const { fechaInicio, fechaFin, agencia } = filters ?? {};
 
-    const baseQb = this.infraccionRepository.createQueryBuilder('infraccion');
+    const baseQb = this.infraccionRepository
+      .createQueryBuilder('infraccion')
+      .leftJoin('infraccion.ubicacion', 'ubicacion');
 
     if (agencia) {
-      baseQb.andWhere('LOWER(infraccion.agencia) LIKE :agenciaKpi', {
+      baseQb.andWhere('LOWER(ubicacion.agencia) LIKE :agenciaKpi', {
         agenciaKpi: `%${agencia.toLowerCase()}%`,
       });
     }
@@ -295,9 +554,9 @@ export class InfraccionesService {
 
     const topDelegacionesRaw = await baseQb
       .clone()
-      .select('infraccion.agencia', 'delegacion')
+      .select('ubicacion.agencia', 'delegacion')
       .addSelect('COUNT(*)', 'total')
-      .groupBy('infraccion.agencia')
+      .groupBy('ubicacion.agencia')
       .orderBy('total', 'DESC')
       .limit(5)
       .getRawMany<{ delegacion: string; total: string }>();
@@ -377,91 +636,81 @@ export class InfraccionesService {
     };
   }
 
-  /* =====================================================
-     FIND BY FOLIO
-     ===================================================== */
-
-  async findByFolio(folio: string): Promise<Infraccion> {
-    const infraccion = await this.infraccionRepository.findOne({
-      where: { folioInfraccion: folio },
-      relations: { encierroRegistro: true },
-    });
-
-    if (!infraccion) {
-      throw new BadRequestException(`No existe infracción con folio ${folio}`);
-    }
-
-    return infraccion;
+  async findByFolio(folio: string): Promise<InfraccionResponseDto> {
+    const infraccion = await this.loadInfraccionOrFail(folio);
+    return mapInfraccionToResponse(infraccion);
   }
-
-  /* =====================================================
-     UPDATE
-     ===================================================== */
 
   async update(
     folio: string,
     cambios: UpdateInfraccionDto,
-    actor?: { id?: number; username?: string },
-  ): Promise<Infraccion> {
-    const infraccion = await this.findByFolio(folio);
+    actor?: Actor,
+  ): Promise<InfraccionResponseDto> {
+    const infraccion = await this.loadInfraccionOrFail(folio);
+    const fechaFinal = cambios.fecha ?? infraccion.fecha;
+    const horaFinal = cambios.hora ?? infraccion.hora;
+    const shouldRecalc = Boolean(cambios.fecha || cambios.hora);
 
-    const { fecha, hora, ...rest } = cambios;
-
-    const fechaFinal = fecha ?? infraccion.fecha;
-    const horaFinal = hora ?? infraccion.hora;
-
-    const shouldRecalc = Boolean(fecha || hora);
-    const fechaHora = shouldRecalc
-      ? this.parseFechaHora(fechaFinal, horaFinal)
-      : infraccion.fechaHora;
+    const normalized = this.normalizePayload({
+      ...mapInfraccionToResponse(infraccion),
+      ...cambios,
+    });
 
     const finalSituacionVehiculo =
-      rest.situacionVehiculo ?? infraccion.situacionVehiculo;
-
+      cambios.situacionVehiculo ?? infraccion.situacionVehiculo;
     const isSoloInfraccion =
       finalSituacionVehiculo === SituacionVehiculoInfraccion.SOLO_INFRACCION;
 
-    const encierro = isSoloInfraccion
+    infraccion.fecha = fechaFinal;
+    infraccion.hora = horaFinal;
+    infraccion.fechaHora = shouldRecalc
+      ? this.parseFechaHora(fechaFinal, horaFinal)
+      : infraccion.fechaHora;
+    infraccion.situacionVehiculo = finalSituacionVehiculo;
+    infraccion.encierro = isSoloInfraccion
       ? 'No aplica'
-      : (rest.encierro ?? infraccion.encierro ?? DEFAULT_ENCIERRO);
-    const servicioGrua = isSoloInfraccion
+      : (cambios.encierro ?? infraccion.encierro ?? DEFAULT_ENCIERRO);
+    infraccion.servicioGrua = isSoloInfraccion
       ? 'No aplica'
-      : (rest.servicioGrua ?? infraccion.servicioGrua ?? DEFAULT_SERVICIO_GRUA);
+      : (cambios.servicioGrua ??
+          infraccion.servicioGrua ??
+          DEFAULT_SERVICIO_GRUA);
+    infraccion.monto = cambios.monto ?? infraccion.monto;
+    infraccion.estatus = cambios.estatus ?? infraccion.estatus;
+    infraccion.infractor = await this.resolveInfractor(normalized.infractor);
+    infraccion.vehiculo = await this.resolveVehiculo(normalized.vehiculo);
+    infraccion.ubicacion = await this.resolveUbicacion(normalized.ubicacion);
+    infraccion.detalles = await this.buildDetalles(normalized.detalles);
+    infraccion.claveOficial =
+      infraccion.detalles[0]?.catalogoInfraccion?.claveOficial;
+    infraccion.numeroParteInformativo =
+      infraccion.detalles[0]?.numeroParteInformativo;
+    infraccion.nombreOperativo = infraccion.detalles[0]?.nombreOperativo;
+    infraccion.sitioServicioPublico =
+      infraccion.detalles[0]?.sitioServicioPublico;
 
-    const actualizada = await this.infraccionRepository.save({
-      ...infraccion,
-      ...rest,
-      ...(fecha ? { fecha } : {}),
-      ...(hora ? { hora } : {}),
-      ...(shouldRecalc ? { fechaHora } : {}),
-      encierro,
-      servicioGrua,
-    });
+    await this.infraccionRepository.save(infraccion);
+    const actualizada = await this.loadInfraccionOrFail(folio);
 
     this.logger.log(`Infracción actualizada folio=${folio}`);
 
     await this.bitacoraService.log('INFRACCION_ACTUALIZADA', {
       description: `Se actualizó la infracción ${folio}`,
       userId: actor?.id,
-      username: actor?.username,
-      metadata: { infraccionId: actualizada.id },
+      infraccionId: actualizada.id,
+      metadata: { folioInfraccion: actualizada.folioInfraccion },
     });
 
     await this.syncEncierroRecord(actualizada);
 
-    return actualizada;
+    return mapInfraccionToResponse(actualizada);
   }
-
-  /* =====================================================
-     DELETE
-     ===================================================== */
 
   async deleteInfra(
     folio: string,
-    actor?: { id?: number; username?: string },
-  ): Promise<Infraccion> {
-    const infraccion = await this.findByFolio(folio);
-
+    actor?: Actor,
+  ): Promise<InfraccionResponseDto> {
+    const infraccion = await this.loadInfraccionOrFail(folio);
     await this.infraccionRepository.remove(infraccion);
 
     this.logger.log(`Infracción eliminada folio=${folio}`);
@@ -469,10 +718,10 @@ export class InfraccionesService {
     await this.bitacoraService.log('INFRACCION_ELIMINADA', {
       description: `Se eliminó la infracción ${folio}`,
       userId: actor?.id,
-      username: actor?.username,
-      metadata: { infraccionId: infraccion.id },
+      infraccionId: infraccion.id,
+      metadata: { folioInfraccion: infraccion.folioInfraccion },
     });
 
-    return infraccion;
+    return mapInfraccionToResponse(infraccion);
   }
 }

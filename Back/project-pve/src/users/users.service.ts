@@ -60,7 +60,6 @@ export class UsersService {
     await this.bitacoraService.log('USER_CREATED', {
       description: `Se creó el usuario ${savedUser.username} con rol ${savedUser.role}`,
       userId: actor?.id,
-      username: actor?.username,
       metadata: { targetUserId: savedUser.id },
     });
 
@@ -113,7 +112,6 @@ export class UsersService {
     await this.bitacoraService.log('USER_ROLE_UPDATED', {
       description: `Se cambió el rol del usuario ${saved.username} a ${saved.role}`,
       userId: actor?.id,
-      username: actor?.username,
       metadata: { targetUserId: saved.id },
     });
 
@@ -170,7 +168,7 @@ export class UsersService {
       await this.infraccionRepository
         .createQueryBuilder()
         .update()
-        .set({ createdBy: targetAdmin })
+        .set({ createdBy: { id: targetAdmin.id } } as any)
         .where('created_by_id = :userId', { userId: id })
         .execute();
     }
@@ -181,7 +179,6 @@ export class UsersService {
     await this.bitacoraService.log('USER_DELETED', {
       description: `Se eliminó el usuario ${user.username}`,
       userId: actingAdmin?.id,
-      username: actingAdmin?.username,
       metadata: { targetUserId: user.id },
     });
 

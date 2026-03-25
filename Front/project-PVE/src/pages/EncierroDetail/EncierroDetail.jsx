@@ -1,10 +1,35 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
 import { ENCIERRO_OPTIONS, SERVICIO_GRUA_OPTIONS } from "../../catalogos";
+import { useAuth } from "../../hooks/useAuth";
 import { encierrosService } from "../../services/encierros";
 
 const WRITE_ROLES = ["admin", "encierro"];
+
+function DetailField({ label, value }) {
+  return (
+    <div className="detail-field">
+      <span className="detail-field__label">{label}</span>
+      <p className="detail-field__value">{value || "-"}</p>
+    </div>
+  );
+}
+
+function DetailSection({ title, items, children, fullWidth = false }) {
+  return (
+    <section className={`detail-section${fullWidth ? " detail-section--full" : ""}`}>
+      <h4>{title}</h4>
+      {items?.length ? (
+        <div className="detail-section-grid">
+          {items.map((item) => (
+            <DetailField key={item.label} label={item.label} value={item.value} />
+          ))}
+        </div>
+      ) : null}
+      {children}
+    </section>
+  );
+}
 
 function EncierroDetailPage() {
   const { folio } = useParams();
@@ -74,7 +99,7 @@ function EncierroDetailPage() {
     }
 
     if (!lookupData?.folioInfraccion) {
-      setError("No se encontró el folio para guardar el encierro");
+      setError("No se encontro el folio para guardar el encierro");
       return;
     }
 
@@ -106,18 +131,12 @@ function EncierroDetailPage() {
         : await encierrosService.create({ folioInfraccion, ...payload }, token);
 
       const saved = response?.data ?? response;
-      setLookupData((prev) =>
-        prev
-          ? {
-              ...prev,
-              registro: saved,
-            }
-          : prev,
-      );
-      hydrateFormFromLookup({
+      const nextLookup = {
         ...lookupData,
         registro: saved,
-      });
+      };
+      setLookupData(nextLookup);
+      hydrateFormFromLookup(nextLookup);
       setSuccessMessage(isUpdate ? "Encierro actualizado correctamente" : "Encierro registrado correctamente");
     } catch (err) {
       setError(err?.message ?? "No fue posible guardar el encierro");
@@ -126,236 +145,166 @@ function EncierroDetailPage() {
     }
   };
 
-  const vehiculo = lookupData?.vehiculo ?? null;
-  const registro = lookupData?.registro ?? null;
-  const hasEgreso = Boolean(registro?.fechaLiberacion || registro?.fechaSalida || registro?.nombreQuienEntrega);
-
   if (loading) {
     return <p>Cargando encierro...</p>;
   }
 
+  if (!lookupData) {
+    return error ? <p className="error-text">{error}</p> : null;
+  }
+
+  const vehiculo = lookupData.vehiculo;
+  const registro = lookupData.registro;
+  const dtoValues = {
+    folioInfraccion: lookupData.folioInfraccion,
+    fechaIngreso: registro?.fechaIngreso || lookupData.fechaInfraccion || "-",
+    encierro: registro?.encierro || lookupData.encierro || "-",
+    nombreQuienRecibe: registro?.nombreQuienRecibe || "-",
+    servicioGrua: registro?.servicioGrua || lookupData.servicioGrua || "-",
+    fechaLiberacion: registro?.fechaLiberacion || "-",
+    fechaSalida: registro?.fechaSalida || "-",
+    nombreQuienEntrega: registro?.nombreQuienEntrega || "-",
+  };
+
   return (
     <section>
-      <header className="section-header">
-        <div>
-          <h2>Detalle de encierro</h2>
-          <p>Folio infracción {lookupData?.folioInfraccion ?? folio}</p>
-        </div>
-        <button type="button" onClick={() => navigate(`/infracciones/${folio}`)}>
-          Volver a infracción
-        </button>
-      </header>
+      <p>Folio infraccion {lookupData.folioInfraccion}</p>
 
       {error ? <p className="error-text">{error}</p> : null}
       {successMessage ? <p className="success-text">{successMessage}</p> : null}
 
-      {lookupData ? (
-        <>
-          <article className="detail-panel">
-            <h3>Datos del folio</h3>
-            <div className="table-wrapper">
-              <table>
-                <tbody>
-                  <tr>
-                    <th scope="row">Folio</th>
-                    <td>{lookupData.folioInfraccion}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+      <article className="detail-panel">
+        <h3>Informacion completa del encierro</h3>
 
-            {vehiculo ? (
-              <>
-                <h4>Vehículo</h4>
-                <div className="table-wrapper">
-                  <table>
-                    <tbody>
-                      <tr>
-                        <th scope="row">Placas</th>
-                        <td>
-                          {vehiculo.placas} ({vehiculo.estadoPlacas})
-                        </td>
-                      </tr>
-                      <tr>
-                        <th scope="row">Marca / Modelo</th>
-                        <td>
-                          {vehiculo.marca} {vehiculo.modelo}
-                        </td>
-                      </tr>
-                      <tr>
-                        <th scope="row">Tipo / Clase</th>
-                        <td>
-                          {vehiculo.tipo} / {vehiculo.clase}
-                        </td>
-                      </tr>
-                      <tr>
-                        <th scope="row">Color</th>
-                        <td>{vehiculo.color}</td>
-                      </tr>
-                      <tr>
-                        <th scope="row">Serie / Motor</th>
-                        <td>
-                          {vehiculo.serie} / {vehiculo.motor}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            ) : null}
-          </article>
+        <div className="detail-sections">
+          <DetailSection
+            title="Datos del encierro"
+            items={[
+              { label: "Folio infraccion", value: dtoValues.folioInfraccion },
+              { label: "Fecha ingreso", value: dtoValues.fechaIngreso },
+              { label: "Encierro", value: dtoValues.encierro },
+              { label: "Nombre de quien recibe", value: dtoValues.nombreQuienRecibe },
+              { label: "Servicio de grua", value: dtoValues.servicioGrua },
+              { label: "Fecha liberacion", value: dtoValues.fechaLiberacion },
+              { label: "Fecha salida", value: dtoValues.fechaSalida },
+              { label: "Nombre de quien entrega", value: dtoValues.nombreQuienEntrega },
+            ]}
+          />
 
-          {registro ? (
-            <>
-              <article className="detail-panel">
-                <h3>Ingreso</h3>
-                <div className="table-wrapper">
-                  <table>
-                    <tbody>
-                      <tr>
-                        <th scope="row">Fecha ingreso</th>
-                        <td>{registro.fechaIngreso}</td>
-                      </tr>
-                      <tr>
-                        <th scope="row">Encierro</th>
-                        <td>{registro.encierro}</td>
-                      </tr>
-                      <tr>
-                        <th scope="row">Servicio de grúa</th>
-                        <td>{registro.servicioGrua ?? "-"}</td>
-                      </tr>
-                      <tr>
-                        <th scope="row">Nombre de quien recibe</th>
-                        <td>{registro.nombreQuienRecibe}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </article>
+          <DetailSection
+            title="Informacion extra del vehiculo"
+            items={[
+              { label: "Servicio", value: vehiculo?.servicio },
+              { label: "Clase", value: vehiculo?.clase },
+              { label: "Tipo", value: vehiculo?.tipo },
+              { label: "Marca", value: vehiculo?.marca },
+              { label: "Modelo", value: vehiculo?.modelo },
+              { label: "Color", value: vehiculo?.color },
+              { label: "Placas", value: vehiculo?.placas },
+              { label: "Estado de placas", value: vehiculo?.estadoPlacas },
+              { label: "Serie", value: vehiculo?.serie },
+              { label: "Motor", value: vehiculo?.motor },
+            ]}
+          />
+        </div>
+      </article>
 
-              <article className="detail-panel">
-                <h3>Egreso</h3>
-                <div className="table-wrapper">
-                  <table>
-                    <tbody>
-                      <tr>
-                        <th scope="row">Fecha liberación</th>
-                        <td>{registro.fechaLiberacion ?? "-"}</td>
-                      </tr>
-                      <tr>
-                        <th scope="row">Fecha salida</th>
-                        <td>{registro.fechaSalida ?? "-"}</td>
-                      </tr>
-                      <tr>
-                        <th scope="row">Nombre de quien entrega</th>
-                        <td>{registro.nombreQuienEntrega ?? "-"}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                {!hasEgreso ? <p className="hasEgreso">Aún no hay datos de egreso para este folio.</p> : null}
-              </article>
+      <article className="detail-panel">
+        <h3>{registro ? "Actualizar encierro" : "Registrar encierro"}</h3>
+        {!canWrite ? <p>Solo los roles encierro y admin pueden guardar cambios.</p> : null}
 
-              <article className="detail-panel">
-                <h3>{registro ? "Actualizar encierro" : "Registrar encierro"}</h3>
-                {!canWrite ? <p>Solo los roles encierro y admin pueden guardar cambios.</p> : null}
-
-                <form className="filter-bar" onSubmit={handleSave}>
-                  <label>
-                    Fecha ingreso *
-                    <input
-                      type="date"
-                      name="fechaIngreso"
-                      value={encierroForm.fechaIngreso}
-                      onChange={handleEncierroChange}
-                      disabled={!canWrite || saving}
-                    />
-                  </label>
-                  <label>
-                    Encierro *
-                    <select
-                      name="encierro"
-                      value={encierroForm.encierro}
-                      onChange={handleEncierroChange}
-                      disabled={!canWrite || saving}
-                    >
-                      <option value="">Selecciona...</option>
-                      {ENCIERRO_OPTIONS.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    Servicio de grúa
-                    <select
-                      name="servicioGrua"
-                      value={encierroForm.servicioGrua}
-                      onChange={handleEncierroChange}
-                      disabled={!canWrite || saving}
-                    >
-                      <option value="">Selecciona...</option>
-                      {SERVICIO_GRUA_OPTIONS.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    Nombre de quien recibe *
-                    <input
-                      type="text"
-                      name="nombreQuienRecibe"
-                      value={encierroForm.nombreQuienRecibe}
-                      onChange={handleEncierroChange}
-                      placeholder="Ej. Juan Perez"
-                      autoComplete="off"
-                      disabled={!canWrite || saving}
-                    />
-                  </label>
-                  <label>
-                    Fecha liberación
-                    <input
-                      type="date"
-                      name="fechaLiberacion"
-                      value={encierroForm.fechaLiberacion}
-                      onChange={handleEncierroChange}
-                      disabled={!canWrite || saving}
-                    />
-                  </label>
-                  <label>
-                    Fecha salida
-                    <input
-                      type="date"
-                      name="fechaSalida"
-                      value={encierroForm.fechaSalida}
-                      onChange={handleEncierroChange}
-                      disabled={!canWrite || saving}
-                    />
-                  </label>
-                  <label>
-                    Nombre de quien entrega
-                    <input
-                      type="text"
-                      name="nombreQuienEntrega"
-                      value={encierroForm.nombreQuienEntrega}
-                      onChange={handleEncierroChange}
-                      placeholder="Ej. Juan Perez"
-                      autoComplete="off"
-                      disabled={!canWrite || saving}
-                    />
-                  </label>
-                  <button type="submit" disabled={!canWrite || saving}>
-                    {saving ? "Guardando..." : registro ? "Guardar cambios" : "Registrar"}
-                  </button>
-                </form>
-              </article>
-            </>
-          ) : null}
-        </>
-      ) : null}
+        <form className="filter-bar" onSubmit={handleSave}>
+          <label>
+            Fecha ingreso *
+            <input
+              type="date"
+              name="fechaIngreso"
+              value={encierroForm.fechaIngreso}
+              onChange={handleEncierroChange}
+              disabled={!canWrite || saving}
+            />
+          </label>
+          <label>
+            Encierro *
+            <select
+              name="encierro"
+              value={encierroForm.encierro}
+              onChange={handleEncierroChange}
+              disabled={!canWrite || saving}
+            >
+              <option value="">Selecciona...</option>
+              {ENCIERRO_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Servicio de grua
+            <select
+              name="servicioGrua"
+              value={encierroForm.servicioGrua}
+              onChange={handleEncierroChange}
+              disabled={!canWrite || saving}
+            >
+              <option value="">Selecciona...</option>
+              {SERVICIO_GRUA_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Nombre de quien recibe *
+            <input
+              type="text"
+              name="nombreQuienRecibe"
+              value={encierroForm.nombreQuienRecibe}
+              onChange={handleEncierroChange}
+              placeholder="Ej. Juan Perez"
+              autoComplete="off"
+              disabled={!canWrite || saving}
+            />
+          </label>
+          <label>
+            Fecha liberacion
+            <input
+              type="date"
+              name="fechaLiberacion"
+              value={encierroForm.fechaLiberacion}
+              onChange={handleEncierroChange}
+              disabled={!canWrite || saving}
+            />
+          </label>
+          <label>
+            Fecha salida
+            <input
+              type="date"
+              name="fechaSalida"
+              value={encierroForm.fechaSalida}
+              onChange={handleEncierroChange}
+              disabled={!canWrite || saving}
+            />
+          </label>
+          <label>
+            Nombre de quien entrega
+            <input
+              type="text"
+              name="nombreQuienEntrega"
+              value={encierroForm.nombreQuienEntrega}
+              onChange={handleEncierroChange}
+              placeholder="Ej. Juan Perez"
+              autoComplete="off"
+              disabled={!canWrite || saving}
+            />
+          </label>
+          <button type="submit" disabled={!canWrite || saving}>
+            {saving ? "Guardando..." : registro ? "Guardar cambios" : "Registrar"}
+          </button>
+        </form>
+      </article>
     </section>
   );
 }

@@ -1,4 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { BitacoraEntry } from '../../bitacora/entities/bitacora-entry.entity';
 import { Infraccion } from '../../infracciones/entities/Infraccion.entity';
 
 /**
@@ -46,4 +47,7 @@ export class User {
 
   @OneToMany(() => Infraccion, (infraccion) => infraccion.createdBy)
   infracciones: Infraccion[];
+
+  @OneToMany(() => BitacoraEntry, (bitacora) => bitacora.user)
+  bitacora: BitacoraEntry[];
 }

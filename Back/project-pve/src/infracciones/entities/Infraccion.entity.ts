@@ -1,38 +1,33 @@
 import {
   Column,
   Entity,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-  JoinColumn,
   Index,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
   OneToOne,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
+import { BitacoraEntry } from '../../bitacora/entities/bitacora-entry.entity';
 import { Encierro } from '../../encierro/entities/encierro.entity';
+import { User } from '../../users/entities/user.entity';
+import { Infractor } from './Infractor.entity';
+import { InfraccionDetalle } from './InfraccionDetalle.entity';
+import { UbicacionInfraccion } from './UbicacionInfraccion.entity';
+import { Vehiculo } from './Vehiculo.entity';
 
-/**
- * Estados posibles para el ciclo de vida de una infraccion.
- */
 export enum EstatusInfraccion {
   PENDIENTE = 'PENDIENTE',
   PAGADA = 'PAGADA',
 }
 
-/**
- * Situación del vehículo al momento de levantar la infracción.
- */
 export enum SituacionVehiculoInfraccion {
   VEHICULO_DETENIDO = 'VEHICULO_DETENIDO',
   SOLO_INFRACCION = 'SOLO_INFRACCION',
 }
 
-/**
- * Entity TypeORM que modela la tabla principal de infracciones.
- */
 @Entity('infracciones')
-@Index(['agencia'])
-@Index(['municipio'])
-@Index(['claveOficial'])
+@Index(['folioInfraccion'], { unique: true })
 @Index(['fechaHora'])
 export class Infraccion {
   @PrimaryGeneratedColumn('uuid')
@@ -50,83 +45,20 @@ export class Infraccion {
   @Column({ type: 'timestamp' })
   fechaHora: Date;
 
-  @Column()
-  nombreInfractor: string;
-
-  @Column()
-  genero: string;
-
-  @Column()
-  numeroLicencia: string;
-
-  @Column()
-  servicio: string;
-
-  @Column()
-  clase: string;
-
-  @Column()
-  tipo: string;
-
-  @Column()
-  marca: string;
-
-  @Column()
-  modelo: string;
-
-  @Column()
-  color: string;
-
-  @Column()
-  placas: string;
-
-  @Column()
-  estadoPlacas: string;
-
-  @Column()
-  serie: string;
-
-  @Column()
-  motor: string;
-
-  @Column()
-  municipio: string;
-
-  @Column()
-  agencia: string;
-
-  @Column()
-  colonia: string;
-
-  @Column()
-  calle: string;
-
-  @Column({ nullable: true })
-  m1?: string;
-
-  @Column({ nullable: true })
-  m2?: string;
-
-  @Column({ nullable: true })
-  m3?: string;
-
-  @Column({ nullable: true })
-  m4?: string;
-
   @Column({
     type: 'enum',
     enum: SituacionVehiculoInfraccion,
   })
   situacionVehiculo: SituacionVehiculoInfraccion;
 
-  @Column()
-  claveOficial: string;
+  @Column({ nullable: true })
+  claveOficial?: string;
 
   @Column({ nullable: true })
   numeroParteInformativo?: string;
 
-  @Column()
-  nombreOperativo: string;
+  @Column({ nullable: true })
+  nombreOperativo?: string;
 
   @Column({ nullable: true })
   sitioServicioPublico?: string;
@@ -136,11 +68,6 @@ export class Infraccion {
 
   @Column({ name: 'servicio_grua', nullable: true })
   servicioGrua?: string;
-
-  @OneToOne(() => Encierro, (encierro) => encierro.infraccion, {
-    nullable: true,
-  })
-  encierroRegistro?: Encierro;
 
   @Column({
     type: 'numeric',
@@ -161,11 +88,45 @@ export class Infraccion {
   })
   estatus: EstatusInfraccion;
 
-  // Usuario que registró la infracción (FK obligatoria)
+  @ManyToOne(() => Infractor, (infractor) => infractor.infracciones, {
+    eager: true,
+    nullable: false,
+  })
+  @JoinColumn({ name: 'infractor_id' })
+  infractor: Infractor;
+
+  @ManyToOne(() => Vehiculo, (vehiculo) => vehiculo.infracciones, {
+    eager: true,
+    nullable: false,
+  })
+  @JoinColumn({ name: 'vehiculo_id' })
+  vehiculo: Vehiculo;
+
+  @ManyToOne(() => UbicacionInfraccion, (ubicacion) => ubicacion.infracciones, {
+    eager: true,
+    nullable: false,
+  })
+  @JoinColumn({ name: 'ubicacion_id' })
+  ubicacion: UbicacionInfraccion;
+
+  @OneToMany(() => InfraccionDetalle, (detalle) => detalle.infraccion, {
+    eager: true,
+    cascade: true,
+  })
+  detalles: InfraccionDetalle[];
+
+  @OneToOne(() => Encierro, (encierro) => encierro.infraccion, {
+    nullable: true,
+  })
+  encierroRegistro?: Encierro;
+
   @ManyToOne(() => User, (user) => user.infracciones, {
     eager: true,
     nullable: false,
   })
   @JoinColumn({ name: 'created_by_id' })
   createdBy: User;
+
+  @OneToMany(() => BitacoraEntry, (bitacora) => bitacora.infraccion)
+  bitacoras: BitacoraEntry[];
 }

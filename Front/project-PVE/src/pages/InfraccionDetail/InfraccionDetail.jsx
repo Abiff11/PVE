@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
-import { infraccionesService } from "../../services/infracciones";
 import InfraccionForm from "../../components/FormInfraccion/InfraccionForm";
 import { DEFAULT_ENCIERRO, DEFAULT_SERVICIO_GRUA } from "../../catalogos";
+import { useAuth } from "../../hooks/useAuth";
+import { infraccionesService } from "../../services/infracciones";
 
-const UPDATE_ROLES = ["admin", "actualizador" ];
+const UPDATE_ROLES = ["admin", "actualizador"];
 const DELETE_ROLES = ["admin", "director"];
 
 function mapRecordToFormValues(record) {
@@ -50,6 +50,37 @@ function mapRecordToFormValues(record) {
   };
 }
 
+function formatCurrency(value) {
+  return `$${Number(value ?? 0).toLocaleString("es-MX", {
+    minimumFractionDigits: 2,
+  })}`;
+}
+
+function DetailField({ label, value }) {
+  return (
+    <div className="detail-field">
+      <span className="detail-field__label">{label}</span>
+      <p className="detail-field__value">{value || "-"}</p>
+    </div>
+  );
+}
+
+function DetailSection({ title, items, fullWidth = false, children }) {
+  return (
+    <section className={`detail-section${fullWidth ? " detail-section--full" : ""}`}>
+      <h4>{title}</h4>
+      {items?.length ? (
+        <div className="detail-section-grid">
+          {items.map((item) => (
+            <DetailField key={item.label} label={item.label} value={item.value} />
+          ))}
+        </div>
+      ) : null}
+      {children}
+    </section>
+  );
+}
+
 function InfraccionDetailPage() {
   const { folio } = useParams();
   const navigate = useNavigate();
@@ -62,6 +93,7 @@ function InfraccionDetailPage() {
 
   const canUpdate = UPDATE_ROLES.includes(role);
   const canDelete = DELETE_ROLES.includes(role);
+  const canViewEncierro = record?.situacionVehiculo === "VEHICULO_DETENIDO" && Boolean(record?.folioInfraccion);
 
   const initialValues = useMemo(() => mapRecordToFormValues(record), [record]);
 
@@ -72,7 +104,7 @@ function InfraccionDetailPage() {
       const data = await infraccionesService.getByFolio(folio, token);
       setRecord(data);
     } catch (err) {
-      setError(err.message ?? "No fue posible cargar la infracción solicitada");
+      setError(err.message ?? "No fue posible cargar la infraccion solicitada");
     } finally {
       setLoading(false);
     }
@@ -86,20 +118,21 @@ function InfraccionDetailPage() {
   const handleUpdate = async (payload) => {
     setSubmitting(true);
     setSuccessMessage(null);
+    setError(null);
     try {
       const { folioInfraccion: _ignored, ...updateDto } = payload;
-      await infraccionesService.update(folio, updateDto, token);
-      setSuccessMessage("Infracción actualizada correctamente");
-      await loadRecord();
+      const updated = await infraccionesService.update(folio, updateDto, token);
+      setRecord(updated);
+      setSuccessMessage("Infraccion actualizada correctamente");
     } catch (err) {
-      setError(err.message ?? "No fue posible actualizar la infracción");
+      setError(err.message ?? "No fue posible actualizar la infraccion");
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!window.confirm("¿Deseas eliminar esta infracción?")) {
+    if (!window.confirm("Deseas eliminar esta infraccion?")) {
       return;
     }
     setSubmitting(true);
@@ -107,7 +140,7 @@ function InfraccionDetailPage() {
       await infraccionesService.remove(folio, token);
       navigate("/infracciones");
     } catch (err) {
-      setError(err.message ?? "No fue posible eliminar la infracción");
+      setError(err.message ?? "No fue posible eliminar la infraccion");
     } finally {
       setSubmitting(false);
     }
@@ -122,213 +155,151 @@ function InfraccionDetailPage() {
   }
 
   if (!record) {
-    return <p>No se encontró información para el folio {folio}</p>;
+    return <p>No se encontro informacion para el folio {folio}</p>;
   }
+
+  const detailItems = record.detalles?.length
+    ? record.detalles
+    : [
+        {
+          id: "fallback",
+          claveOficial: record.claveOficial || "-",
+          numeroParteInformativo: record.numeroParteInformativo || "-",
+          nombreOperativo: record.nombreOperativo || "-",
+          sitioServicioPublico: record.sitioServicioPublico || "-",
+        },
+      ];
 
   return (
     <section>
-      <header className="section-header">
-        <div>
-          <h2>Detalle de infracción</h2>
-          <p>Folio {record.folioInfraccion}</p>
-        </div>
-        {record?.encierroRegistro ? (
-          <button type="button" onClick={() => navigate(`/encierros/${record.folioInfraccion}`)} disabled={submitting}>
-            Detalle encierro
-          </button>
-        ) : null}
-        {canDelete && (
-          <button type="button" onClick={handleDelete} disabled={submitting}>
-            Eliminar
-          </button>
-        )}
-      </header>
+      <p>Folio {record.folioInfraccion}</p>
 
       {successMessage ? <p className="success-text">{successMessage}</p> : null}
 
       {canUpdate ? (
-        <>
-          <InfraccionForm
-            initialValues={initialValues}
-            onSubmit={handleUpdate}
-            submitting={submitting}
-            submitLabel="Actualizar"
-            showFolio={false}
-            allowStatus
-          />
-        </>
+        <InfraccionForm
+          initialValues={initialValues}
+          onSubmit={handleUpdate}
+          submitting={submitting}
+          submitLabel="Actualizar"
+          showFolio={false}
+          allowStatus
+        />
       ) : (
         <article className="detail-panel">
-          <h3>Información de la infracción</h3>
+          <h3>Informacion completa de la infraccion</h3>
 
-          <table className="detail-table">
-            <tbody>
-              <tr>
-                <th>Folio</th>
-                <td>{record.folioInfraccion}</td>
-              </tr>
+          <div className="detail-sections">
+            <DetailSection
+              title="Resumen"
+              items={[
+                { label: "Folio", value: record.folioInfraccion },
+                { label: "Fecha", value: record.fecha },
+                { label: "Hora", value: record.hora?.slice?.(0, 5) ?? record.hora },
+                {
+                  label: "Estatus",
+                  value: record.estatus === "PAGADA" ? "Pagada" : "Pendiente",
+                },
+                { label: "Monto", value: formatCurrency(record.monto) },
+                {
+                  label: "Relacion con encierro",
+                  value:
+                    record.situacionVehiculo === "VEHICULO_DETENIDO"
+                      ? `Vehiculo detenido${record.encierro ? ` • ${record.encierro}` : ""}`
+                      : "Solo infraccion",
+                },
+              ]}
+            />
 
-              <tr>
-                <th>Encierro</th>
-                <td>{record.situacionVehiculo === "SOLO_INFRACCION" ? "No aplica" : (record.encierro ?? "-")}</td>
-              </tr>
+            <DetailSection
+              title="Datos completos del infractor"
+              items={[
+                { label: "Nombre", value: record.nombreInfractor },
+                { label: "Genero", value: record.genero },
+                { label: "Numero de licencia", value: record.numeroLicencia },
+              ]}
+            />
 
-              <tr>
-                <th>Servicio grúa</th>
-                <td>{record.situacionVehiculo === "SOLO_INFRACCION" ? "No aplica" : (record.servicioGrua ?? "-")}</td>
-              </tr>
+            <DetailSection
+              title="Vehiculo"
+              items={[
+                { label: "Servicio", value: record.servicio },
+                { label: "Clase", value: record.clase },
+                { label: "Tipo", value: record.tipo },
+                { label: "Marca", value: record.marca },
+                { label: "Modelo", value: record.modelo },
+                { label: "Color", value: record.color },
+                { label: "Placas", value: record.placas },
+                { label: "Estado de placas", value: record.estadoPlacas },
+                { label: "Serie", value: record.serie },
+                { label: "Motor", value: record.motor },
+              ]}
+            />
 
-              <tr>
-                <th>Fecha</th>
-                <td>{record.fecha}</td>
-              </tr>
+            <DetailSection
+              title="Ubicacion"
+              items={[
+                { label: "Municipio", value: record.municipio },
+                { label: "Agencia", value: record.agencia },
+                { label: "Colonia", value: record.colonia },
+                { label: "Calle", value: record.calle },
+                { label: "M1", value: record.m1 || "-" },
+                { label: "M2", value: record.m2 || "-" },
+                { label: "M3", value: record.m3 || "-" },
+                { label: "M4", value: record.m4 || "-" },
+              ]}
+            />
 
-              <tr>
-                <th>Hora</th>
-                <td>{record.hora?.slice?.(0, 5) ?? record.hora}</td>
-              </tr>
+            <DetailSection title="Motivos detallados" fullWidth>
+              <div className="detail-sections">
+                {detailItems.map((item, index) => (
+                  <DetailSection
+                    key={item.id ?? `${item.claveOficial}-${index}`}
+                    title={`Motivo ${index + 1}`}
+                    items={[
+                      { label: "Clave oficial", value: item.claveOficial },
+                      { label: "Operativo", value: item.nombreOperativo },
+                      { label: "Numero de parte", value: item.numeroParteInformativo || "-" },
+                      { label: "Sitio de servicio publico", value: item.sitioServicioPublico || "-" },
+                    ]}
+                  />
+                ))}
+              </div>
+            </DetailSection>
 
-              <tr>
-                <th>Nombre infractor</th>
-                <td>{record.nombreInfractor}</td>
-              </tr>
+            <DetailSection
+              title="Evidencia"
+              items={[{ label: "Adjuntos", value: "No hay evidencia registrada en este folio." }]}
+            />
 
-              <tr>
-                <th>Género</th>
-                <td>{record.genero}</td>
-              </tr>
+            <DetailSection
+              title="Observaciones"
+              items={[
+                {
+                  label: "Servicio de grua",
+                  value: record.situacionVehiculo === "VEHICULO_DETENIDO" ? record.servicioGrua || "-" : "No aplica",
+                },
+                {
+                  label: "Patio / encierro",
+                  value: record.situacionVehiculo === "VEHICULO_DETENIDO" ? record.encierro || "-" : "No aplica",
+                },
+              ]}
+            />
 
-              <tr>
-                <th>No. licencia</th>
-                <td>{record.numeroLicencia}</td>
-              </tr>
-
-              <tr>
-                <th>Servicio</th>
-                <td>{record.servicio}</td>
-              </tr>
-
-              <tr>
-                <th>Clase</th>
-                <td>{record.clase}</td>
-              </tr>
-
-              <tr>
-                <th>Tipo</th>
-                <td>{record.tipo}</td>
-              </tr>
-
-              <tr>
-                <th>Marca</th>
-                <td>{record.marca}</td>
-              </tr>
-
-              <tr>
-                <th>Modelo</th>
-                <td>{record.modelo}</td>
-              </tr>
-
-              <tr>
-                <th>Color</th>
-                <td>{record.color}</td>
-              </tr>
-
-              <tr>
-                <th>Placas</th>
-                <td>{record.placas}</td>
-              </tr>
-
-              <tr>
-                <th>Estado</th>
-                <td>{record.estadoPlacas}</td>
-              </tr>
-
-              <tr>
-                <th>Serie</th>
-                <td>{record.serie}</td>
-              </tr>
-
-              <tr>
-                <th>Motor</th>
-                <td>{record.motor}</td>
-              </tr>
-
-              <tr>
-                <th>Municipio</th>
-                <td>{record.municipio}</td>
-              </tr>
-
-              <tr>
-                <th>Agencia</th>
-                <td>{record.agencia}</td>
-              </tr>
-
-              <tr>
-                <th>Colonia</th>
-                <td>{record.colonia}</td>
-              </tr>
-
-              <tr>
-                <th>Calle</th>
-                <td>{record.calle}</td>
-              </tr>
-
-              <tr>
-                <th>M1</th>
-                <td>{record.m1 ?? "-"}</td>
-              </tr>
-
-              <tr>
-                <th>M2</th>
-                <td>{record.m2 ?? "-"}</td>
-              </tr>
-
-              <tr>
-                <th>M3</th>
-                <td>{record.m3 ?? "-"}</td>
-              </tr>
-
-              <tr>
-                <th>M4</th>
-                <td>{record.m4 ?? "-"}</td>
-              </tr>
-
-              <tr>
-                <th>Vehículo detenido o solo infracción</th>
-                <td>{record.situacionVehiculo === "VEHICULO_DETENIDO" ? "Vehículo detenido" : "Solo infracción"}</td>
-              </tr>
-
-              <tr>
-                <th>Clave del oficial</th>
-                <td>{record.claveOficial}</td>
-              </tr>
-
-              <tr>
-                <th>No. parte informativo</th>
-                <td>{record.numeroParteInformativo ?? "-"}</td>
-              </tr>
-
-              <tr>
-                <th>Nombre operativo</th>
-                <td>{record.nombreOperativo}</td>
-              </tr>
-
-              <tr>
-                <th>Sitio (servicio público)</th>
-                <td>{record.sitioServicioPublico ?? "-"}</td>
-              </tr>
-
-              <tr>
-                <th>Monto</th>
-                <td>${Number(record.monto ?? 0).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</td>
-              </tr>
-
-              <tr>
-                <th>Estatus</th>
-                <td>{record.estatus}</td>
-              </tr>
-            </tbody>
-          </table>
+            <DetailSection
+              title="Historial"
+              items={[
+                {
+                  label: "Capturado por",
+                  value: record.createdBy
+                    ? `${record.createdBy.nombre} ${record.createdBy.apellido} (${record.createdBy.username})`
+                    : "-",
+                },
+                { label: "Rol del capturista", value: record.createdBy?.role || "-" },
+                { label: "Estado actual", value: record.estatus },
+              ]}
+            />
+          </div>
 
           <p>
             Solo los roles {UPDATE_ROLES.join(", ")} pueden editar. Contacta a un administrador si necesitas cambios.

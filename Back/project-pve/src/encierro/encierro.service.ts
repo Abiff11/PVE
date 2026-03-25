@@ -13,21 +13,63 @@ interface Actor {
   username?: string;
 }
 
+type EncierroLookupVehiculo = {
+  clase: string;
+  tipo: string;
+  marca: string;
+  modelo: string;
+  color: string;
+  placas: string;
+  estadoPlacas: string;
+  serie: string;
+  motor: string;
+  servicio: string;
+};
+
 export type EncierroLookupResponse = {
   folioInfraccion: string;
   encierro: string | null;
   servicioGrua: string | null;
   fechaInfraccion: string;
-  vehiculo: {
-    clase: string;
-    tipo: string;
-    marca: string;
-    modelo: string;
-    color: string;
-    placas: string;
-    estadoPlacas: string;
-    serie: string;
-    motor: string;
+  horaInfraccion: string;
+  vehiculo: EncierroLookupVehiculo;
+  propietario: {
+    nombre: string;
+    genero: string;
+    numeroLicencia: string;
+  };
+  ubicacion: {
+    municipio: string;
+    agencia: string;
+    colonia: string;
+    calle: string;
+    m1?: string;
+    m2?: string;
+    m3?: string;
+    m4?: string;
+  };
+  infraccion: {
+    situacionVehiculo: string;
+    estatus: string;
+    monto: number;
+    claveOficial?: string;
+    numeroParteInformativo?: string;
+    nombreOperativo?: string;
+    sitioServicioPublico?: string;
+  };
+  detalles: Array<{
+    id: string;
+    claveOficial: string;
+    numeroParteInformativo?: string;
+    nombreOperativo: string;
+    sitioServicioPublico?: string;
+  }>;
+  createdBy: {
+    id: number;
+    username: string;
+    nombre: string;
+    apellido: string;
+    role: string;
   };
   registro: Encierro | null;
 };
@@ -55,12 +97,11 @@ export class EncierroService {
 
     const infraccion = await this.infraccionRepository.findOne({
       where: { folioInfraccion: dto.folioInfraccion },
+      relations: { vehiculo: true },
     });
 
     if (!infraccion) {
-      throw new BadRequestException(
-        `No existe infracción con folio ${dto.folioInfraccion}`,
-      );
+      throw new BadRequestException(`No existe infraccion con folio ${dto.folioInfraccion}`);
     }
 
     const nuevo = this.encierroRepository.create({
@@ -72,9 +113,9 @@ export class EncierroService {
     this.logger.log(`Encierro creado folio=${guardado.folioInfraccion}`);
 
     await this.bitacoraService.log('ENCIERRO_CREATED', {
-      description: `Se creó el encierro con folio ${guardado.folioInfraccion}`,
+      description: `Se creo el encierro con folio ${guardado.folioInfraccion}`,
       userId: actor?.id,
-      username: actor?.username,
+      infraccionId: infraccion.id,
       metadata: {
         encierroId: guardado.id,
         folioInfraccion: guardado.folioInfraccion,
@@ -87,31 +128,81 @@ export class EncierroService {
   async lookupByFolio(folio: string): Promise<EncierroLookupResponse> {
     const infraccion = await this.infraccionRepository.findOne({
       where: { folioInfraccion: folio },
+      relations: {
+        vehiculo: true,
+        infractor: true,
+        ubicacion: true,
+        detalles: { catalogoInfraccion: true },
+        createdBy: true,
+      },
     });
 
     if (!infraccion) {
-      throw new BadRequestException(`No existe infracción con folio ${folio}`);
+      throw new BadRequestException(`No existe infraccion con folio ${folio}`);
     }
 
     const registro = await this.encierroRepository.findOne({
       where: { folioInfraccion: folio },
     });
 
+    const primerDetalle = infraccion.detalles?.[0];
+
     return {
       folioInfraccion: infraccion.folioInfraccion,
       encierro: infraccion.encierro ?? null,
       servicioGrua: infraccion.servicioGrua ?? null,
       fechaInfraccion: infraccion.fecha,
+      horaInfraccion: infraccion.hora,
       vehiculo: {
-        clase: infraccion.clase,
-        tipo: infraccion.tipo,
-        marca: infraccion.marca,
-        modelo: infraccion.modelo,
-        color: infraccion.color,
-        placas: infraccion.placas,
-        estadoPlacas: infraccion.estadoPlacas,
-        serie: infraccion.serie,
-        motor: infraccion.motor,
+        clase: infraccion.vehiculo.clase,
+        tipo: infraccion.vehiculo.tipo,
+        marca: infraccion.vehiculo.marca,
+        modelo: infraccion.vehiculo.modelo,
+        color: infraccion.vehiculo.color,
+        placas: infraccion.vehiculo.placas,
+        estadoPlacas: infraccion.vehiculo.estadoPlacas,
+        serie: infraccion.vehiculo.serie,
+        motor: infraccion.vehiculo.motor,
+        servicio: infraccion.vehiculo.servicio,
+      },
+      propietario: {
+        nombre: infraccion.infractor.nombre,
+        genero: infraccion.infractor.genero,
+        numeroLicencia: infraccion.infractor.numeroLicencia,
+      },
+      ubicacion: {
+        municipio: infraccion.ubicacion.municipio,
+        agencia: infraccion.ubicacion.agencia,
+        colonia: infraccion.ubicacion.colonia,
+        calle: infraccion.ubicacion.calle,
+        m1: infraccion.ubicacion.m1,
+        m2: infraccion.ubicacion.m2,
+        m3: infraccion.ubicacion.m3,
+        m4: infraccion.ubicacion.m4,
+      },
+      infraccion: {
+        situacionVehiculo: infraccion.situacionVehiculo,
+        estatus: infraccion.estatus,
+        monto: infraccion.monto,
+        claveOficial: primerDetalle?.catalogoInfraccion?.claveOficial,
+        numeroParteInformativo: primerDetalle?.numeroParteInformativo,
+        nombreOperativo: primerDetalle?.nombreOperativo,
+        sitioServicioPublico: primerDetalle?.sitioServicioPublico,
+      },
+      detalles:
+        infraccion.detalles?.map((detalle) => ({
+          id: detalle.id,
+          claveOficial: detalle.catalogoInfraccion.claveOficial,
+          numeroParteInformativo: detalle.numeroParteInformativo,
+          nombreOperativo: detalle.nombreOperativo,
+          sitioServicioPublico: detalle.sitioServicioPublico,
+        })) ?? [],
+      createdBy: {
+        id: infraccion.createdBy.id,
+        username: infraccion.createdBy.username,
+        nombre: infraccion.createdBy.nombre,
+        apellido: infraccion.createdBy.apellido,
+        role: infraccion.createdBy.role,
       },
       registro: registro ?? null,
     };
@@ -120,6 +211,7 @@ export class EncierroService {
   async findByFolio(folio: string): Promise<Encierro> {
     const encierro = await this.encierroRepository.findOne({
       where: { folioInfraccion: folio },
+      relations: { infraccion: true },
     });
 
     if (!encierro) {
@@ -135,19 +227,15 @@ export class EncierroService {
     page: number;
     pageSize: number;
   }> {
-    const {
-      folio,
-      encierro,
-      fechaInicio,
-      fechaFin,
-      page = 1,
-      pageSize = 10,
-    } = query ?? {};
+    const { folio, encierro, fechaInicio, fechaFin, page = 1, pageSize = 10 } = query ?? {};
 
     const pageNumber = page > 0 ? page : 1;
     const take = pageSize > 0 ? pageSize : 10;
 
-    const qb = this.encierroRepository.createQueryBuilder('encierro');
+    const qb = this.encierroRepository
+      .createQueryBuilder('encierro')
+      .leftJoinAndSelect('encierro.infraccion', 'infraccion')
+      .leftJoinAndSelect('infraccion.vehiculo', 'vehiculo');
 
     if (folio) {
       qb.andWhere('LOWER(encierro.folioInfraccion) LIKE :folio', {
@@ -166,13 +254,11 @@ export class EncierroService {
       const fin = new Date(`${fechaFin}T23:59:59.999`);
 
       if (isNaN(inicio.getTime()) || isNaN(fin.getTime())) {
-        throw new BadRequestException('Rango de fechas inválido');
+        throw new BadRequestException('Rango de fechas invalido');
       }
 
       if (inicio.getTime() > fin.getTime()) {
-        throw new BadRequestException(
-          'fechaInicio no puede ser mayor a fechaFin',
-        );
+        throw new BadRequestException('fechaInicio no puede ser mayor a fechaFin');
       }
 
       qb.andWhere('encierro.fechaIngreso BETWEEN :start AND :end', {
@@ -183,14 +269,14 @@ export class EncierroService {
       if (fechaInicio) {
         const inicio = new Date(`${fechaInicio}T00:00:00`);
         if (isNaN(inicio.getTime())) {
-          throw new BadRequestException('fechaInicio inválida');
+          throw new BadRequestException('fechaInicio invalida');
         }
         qb.andWhere('encierro.fechaIngreso >= :start', { start: fechaInicio });
       }
       if (fechaFin) {
         const fin = new Date(`${fechaFin}T00:00:00`);
         if (isNaN(fin.getTime())) {
-          throw new BadRequestException('fechaFin inválida');
+          throw new BadRequestException('fechaFin invalida');
         }
         qb.andWhere('encierro.fechaIngreso <= :end', { end: fechaFin });
       }
@@ -209,11 +295,7 @@ export class EncierroService {
     };
   }
 
-  async update(
-    folio: string,
-    cambios: UpdateEncierroDto,
-    actor?: Actor,
-  ): Promise<Encierro> {
+  async update(folio: string, cambios: UpdateEncierroDto, actor?: Actor): Promise<Encierro> {
     const actual = await this.findByFolio(folio);
     const actualizado = await this.encierroRepository.save({
       ...actual,
@@ -222,9 +304,9 @@ export class EncierroService {
     this.logger.log(`Encierro actualizado folio=${folio}`);
 
     await this.bitacoraService.log('ENCIERRO_UPDATED', {
-      description: `Se actualizó el encierro con folio ${folio}`,
+      description: `Se actualizo el encierro con folio ${folio}`,
       userId: actor?.id,
-      username: actor?.username,
+      infraccionId: actual.infraccion?.id,
       metadata: {
         encierroId: actualizado.id,
         folioInfraccion: actualizado.folioInfraccion,
@@ -241,9 +323,9 @@ export class EncierroService {
     this.logger.log(`Encierro eliminado folio=${folio}`);
 
     await this.bitacoraService.log('ENCIERRO_DELETED', {
-      description: `Se eliminó el encierro con folio ${folio}`,
+      description: `Se elimino el encierro con folio ${folio}`,
       userId: actor?.id,
-      username: actor?.username,
+      infraccionId: actual.infraccion?.id,
       metadata: {
         encierroId: actual.id,
         folioInfraccion: actual.folioInfraccion,
