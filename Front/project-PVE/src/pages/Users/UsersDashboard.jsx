@@ -4,10 +4,11 @@ import { usersService } from "../../services/users";
 import UserForm from "../../components/Users/UserForm";
 
 const ROLE_LABELS = {
-  Admin: "Admin",
-  Director: "Director",
-  Capturista: "Capturista",
-  Actualizador: "Actualizador",
+  admin: "Admin",
+  director: "Director",
+  capturista: "Capturista",
+  actualizador: "Actualizador",
+  encierro: "Encierro",
 };
 
 /**

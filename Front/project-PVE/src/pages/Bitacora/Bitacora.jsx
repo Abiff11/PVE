@@ -92,11 +92,11 @@ function BitacoraPage() {
         <table>
           <thead>
             <tr>
-              <th>Fecha</th>
-              <th>Acción</th>
-              <th>Usuario</th>
-              <th>Descripción</th>
-              <th>Folio</th>
+              <th style={{ width: "250px" }}>Fecha</th>
+              <th style={{ width: "250px" }}>Acción</th>
+              <th style={{ width: "100px" }}>Usuario</th>
+              <th style={{ width: "auto" }}>Descripción</th>
+              <th style={{ width: "150px" }}>Folio</th>
             </tr>
           </thead>
           <tbody>

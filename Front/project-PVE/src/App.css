@@ -739,6 +739,22 @@ td {
   margin-top: 1.5rem;
 }
 
+.kpi-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.kpi-section h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text-main);
+  font-weight: 700;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--primary);
+  text-align: center;
+}
+
 .kpi-card {
   background-color: #fff;
   border-radius: 16px;

@@ -111,11 +111,12 @@ function InfraccionesListPage() {
           <table>
             <thead>
               <tr>
-                <th>Folio</th>
-                <th>Fecha</th>
-                <th>Oficial</th>
-                <th>Motivo</th>
-                <th>Estatus</th>
+                <th style={{ width: "140px" }}>Folio</th>
+                <th>Fecha y hora</th>
+                <th style={{ width: "200px" }}>Infractor</th>
+                <th>Placas</th>
+                <th style={{ width: "250px" }}>Situación</th>
+                <th style={{ width: "130px" }}>Estatus</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -130,13 +131,16 @@ function InfraccionesListPage() {
                     <td data-label="Folio">
                       <span className="cell-truncate">{item.folioInfraccion}</span>
                     </td>
-                    <td data-label="Fecha">
-                      <span className="cell-truncate">{item.fecha}</span>
+                    <td data-label="Fecha y hora">
+                      <span className="cell-truncate">{new Date(item.fecha).toLocaleString()}</span>
                     </td>
-                    <td data-label="Oficial">
-                      <span className="cell-truncate">{item.claveOficial || "-"}</span>
+                    <td data-label="Infractor">
+                      <span className="cell-truncate">{item.nombreInfractor || "-"}</span>
                     </td>
-                    <td data-label="Motivo">
+                    <td data-label="Placas">
+                      <span className="cell-truncate">{item.placas}</span>
+                    </td>
+                    <td data-label="Situación">
                       <span className="cell-truncate">{getMotivoLabel(item)}</span>
                     </td>
                     <td data-label="Estatus">

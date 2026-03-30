@@ -625,6 +625,24 @@ export class InfraccionesService {
       { laJoya: 0, sanSebastianTutla: 0 },
     );
 
+    const usuariosPorRolRaw = await this.usersService.getConteoPorRol();
+    const usuariosPorRol = usuariosPorRolRaw.reduce<Record<string, number>>(
+      (acc, item) => {
+        acc[item.role] = item.total;
+        return acc;
+      },
+      {},
+    );
+
+    const usuariosDelegacionRaw = await this.usersService.getConteoPorDelegacion();
+    const usuariosPorDelegacion = usuariosDelegacionRaw.reduce<Record<string, number>>(
+      (acc, item) => {
+        acc[item.delegacion] = item.total;
+        return acc;
+      },
+      {},
+    );
+
     return {
       filtros: filters,
       totalInfracciones,
@@ -633,6 +651,8 @@ export class InfraccionesService {
       montoPorEstatus,
       topDelegaciones,
       vehiculosEnResguardo,
+      usuariosPorRol,
+      usuariosPorDelegacion,
     };
   }
 

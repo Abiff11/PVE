@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { DEFAULT_ENCIERRO, DEFAULT_SERVICIO_GRUA, ENCIERRO_OPTIONS, SERVICIO_GRUA_OPTIONS } from "../../catalogos";
+import { normalizeText } from "../../utils/normalizers";
 
 const ESTATUS_OPTIONS = [
   { label: "Pendiente", value: "PENDIENTE" },
@@ -84,7 +85,7 @@ function InfraccionForm({
     const { name, type, value, checked } = event.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: type === "checkbox" ? checked : type === "text" ? normalizeText(value) : value,
     }));
   };
 

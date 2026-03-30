@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { normalizeText } from '../../utils/normalizers';
 
 /**
  * Delegaciones disponibles en el sistema. Se estandarizan los nombres para evitar variaciones.
@@ -36,8 +37,11 @@ function UserForm({ onSubmit, submitting = false }) {
    * Sincroniza el estado controlado cuando cambia cualquier input/select.
    */
   const handleChange = (event) => {
-    const { name, value } = event.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, type, value } = event.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'text' ? normalizeText(value) : value,
+    }));
   };
 
   /**

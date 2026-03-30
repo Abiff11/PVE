@@ -184,4 +184,33 @@ export class UsersService {
 
     return rest;
   }
+
+  async getConteoPorRol(): Promise<{ role: string; total: number }[]> {
+    const result = await this.usersRepository
+      .createQueryBuilder('user')
+      .select('user.role', 'role')
+      .addSelect('COUNT(*)', 'total')
+      .groupBy('user.role')
+      .getRawMany<{ role: string; total: string }>();
+
+    return result.map((item) => ({
+      role: item.role,
+      total: Number(item.total),
+    }));
+  }
+
+  async getConteoPorDelegacion(): Promise<{ delegacion: string; total: number }[]> {
+    const result = await this.usersRepository
+      .createQueryBuilder('user')
+      .select('user.delegacion', 'delegacion')
+      .addSelect('COUNT(*)', 'total')
+      .groupBy('user.delegacion')
+      .orderBy('total', 'DESC')
+      .getRawMany<{ delegacion: string; total: string }>();
+
+    return result.map((item) => ({
+      delegacion: item.delegacion,
+      total: Number(item.total),
+    }));
+  }
 }
